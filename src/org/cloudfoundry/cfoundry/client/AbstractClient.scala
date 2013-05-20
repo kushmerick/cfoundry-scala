@@ -67,14 +67,8 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String,Logger) => TCR
 
   //////// sugar for Java
   
-  import scala.collection.JavaConverters._
-  
   def o(method: String) = {
-    selectDynamic(method).baby
-  }
-  
-  def oo(method: String) = {
-    selectDynamic(method).children.asJava
+    selectDynamic(method)
   }
 
 }

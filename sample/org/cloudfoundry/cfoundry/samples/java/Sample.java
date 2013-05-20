@@ -2,8 +2,6 @@ package org.cloudfoundry.cfoundry.samples.java;
 
 import org.cloudfoundry.cfoundry.client.*;
 import org.cloudfoundry.cfoundry.resources.*;
-
-import java.util.*;
 import java.util.logging.*;
 
 class Sample {
@@ -14,7 +12,7 @@ class Sample {
 		String password = args[2];
 		Client client = new Client(target, logger());
 		client.login(username, password);
-		for (Resource service: (List<Resource>) client.oo("services")) {
+		for (Resource service: JavaInterop.asResources(client.o("services"))) {
         	System.out.println(service);
 		}
 		client.logout();

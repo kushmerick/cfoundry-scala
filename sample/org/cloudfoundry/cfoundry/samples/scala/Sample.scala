@@ -8,10 +8,6 @@ import org.cloudfoundry.cfoundry.resources.Magic
 
 object Sample extends App {
   
-  implicit def magic2children(magic: Magic) = magic.children
-  implicit def magic2baby(magic: Magic) = magic.baby
-  implicit def magic2prop(magic: Magic) = magic.prop
-
   val (target, username, password) = arguments
   val client: Client = new Client(target, logger)
   

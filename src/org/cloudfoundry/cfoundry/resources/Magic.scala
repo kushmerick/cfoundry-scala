@@ -4,28 +4,33 @@ import org.cloudfoundry.cfoundry.exceptions._
 
 abstract class Magic {
   
-  def baby = this match {
-    case Baby(r) => r
-    case Children(s) => throw new PropertyChildConfusion("baby", s)
-    case Prop(v) => throw new PropertyChildConfusion("baby", v)
+  def resource = this match {
+    case MagicResource(r) => r
+    case _ => throw new PropertyChildConfusion("res", this)
   }
   
-  def children = this match {
-    case Baby(r) => throw new PropertyChildConfusion("children", r)
-    case Children(s) => s
-    case Prop(v) => throw new PropertyChildConfusion("children", v)
+  def resources = this match {
+    case MagicResources(s) => s
+    case _ => throw new PropertyChildConfusion("ress", this)
   }
 
   def prop = this match {
-    case Baby(r) => throw new PropertyChildConfusion("prop", r)
-    case Children(s) => throw new PropertyChildConfusion("prop", s)
-    case Prop(v) => v
+    case MagicProp(v) => v
+    case _ => throw new PropertyChildConfusion("prop", this)
   }
-
+  
+  override def toString = {
+    "<Magic: " + (this match {
+      case MagicResource(r) => r
+      case MagicResources(s) => s
+      case MagicProp(v) => v
+    }) + ">"
+  }
+  
 }
 
-case class Baby(r: Resource) extends Magic
+case class MagicResource(r: Resource) extends Magic
 
-case class Children(s: Seq[Resource]) extends Magic
+case class MagicResources(s: Seq[Resource]) extends Magic
 
-case class Prop(a: Any) extends Magic
+case class MagicProp(a: Any) extends Magic

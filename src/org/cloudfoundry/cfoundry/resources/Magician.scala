@@ -29,10 +29,10 @@ class Magician(crud: CRUD, tokenProvider: TokenProvider) {
     val factory = factoryFor(noun)
     if (isSingular(noun))
       // client.service
-      Baby(create(factory))
+      MagicResource(create(factory))
     else
       // client.services
-      Children(enumerate(factory))
+      MagicResources(enumerate(factory))
   }
 
   def update(method: String, value: Any): Any = {
@@ -43,17 +43,17 @@ class Magician(crud: CRUD, tokenProvider: TokenProvider) {
   def selectForResource(resource: Resource, noun: String) = {
     if (resource.hasProperty(noun)) {
       // service.version
-      Prop(resource.getData(noun))
+      MagicProp(resource.getData(noun))
     } else {
       val singular = Inflector.singularize(noun)
       if (resource.hasChild(singular)) {
         if (Inflector.isSingular(noun)) {
           // service.servicePlan
-          Baby(create(factoryFor(noun)))
+          MagicResource(create(factoryFor(noun)))
         } else {
           // service.servicePlans
           val path = resource.getData(resource.childUrlPropertyName(noun))
-          Children(enumerateChildren(noun, path))
+          MagicResources(enumerateChildren(noun, path))
         }
       } else {
         throw new InvalidProperty(noun, resource)
