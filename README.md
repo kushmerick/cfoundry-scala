@@ -1,6 +1,6 @@
 # cfoundry-scala
 
-cfoundry-scala is a 'native' Scala reimplementation of [cfoundry|http://github.com/cloudfoundry/cfoundry].
+cfoundry-scala is a 'native' Scala reimplementation of the "cfoundry" CF Ruby client (http://github.com/cloudfoundry/cfoundry).
 
 ## Using cfoundry-scala from Scala
 
