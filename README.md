@@ -19,7 +19,7 @@ https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry
 
     Client client = new Client(target);
     client.login(username, password);
-    for (Resource service: JavaInterop.asResources(client.o("services"))) {
+    for (Resource service: client.o("services").asResources()) {
       ...
     }
     client.logout();
