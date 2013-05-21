@@ -6,10 +6,10 @@ class Factory(val singular: String) {
 
   import Factory._
   import Inflector._
-  
+
   val plural = pluralize(singular)
   private val Singular = capitalize(singular)
-  
+
   private def resourceClass: Class[_] = {
     Class.forName(s"${PACKAGE_NAME}.${Singular}")
   }
@@ -17,7 +17,7 @@ class Factory(val singular: String) {
   def apply(magician: Magician): Resource = {
     val resource = resourceClass.newInstance.asInstanceOf[Resource]
     resource.magician = magician
-    resource    
+    resource
   }
 
   def apply(magician: Magician, payload: Payload): Resource = {
@@ -27,7 +27,7 @@ class Factory(val singular: String) {
 }
 
 object Factory {
-  
+
   private val PACKAGE_NAME = getClass.getPackage.getName
 
 }

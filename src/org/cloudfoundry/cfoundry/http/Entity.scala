@@ -6,11 +6,11 @@ import org.apache.http._
 import org.apache.http.entity._
 
 object Entity {
-  
+
   def excerpt(request: HttpEntityEnclosingRequest, maxLength: Int): String = excerpt(request.getEntity, maxLength)
-  
+
   def excerpt(response: HttpResponse, maxLength: Int): String = excerpt(response.getEntity, maxLength)
-  
+
   private def excerpt(entity: HttpEntity, maxLength: Int): String = {
     val istream = entity.getContent
 
@@ -26,7 +26,7 @@ object Entity {
       new String(buf, 0, nread, charset)
     }
   }
-  
+
   lazy private val UTF8 = Charset.forName("UTF-8")
 
 }

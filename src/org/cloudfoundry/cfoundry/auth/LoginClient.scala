@@ -5,7 +5,7 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
 
-class LoginClient[TCRUD <: CRUD](crudFactory: (String,Logger) => TCRUD, endpoint: String, logger: Logger) {
+class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoint: String, logger: Logger) {
 
   import LoginClient._
 

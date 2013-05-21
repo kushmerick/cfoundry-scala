@@ -5,7 +5,7 @@ import org.apache.http.entity._
 import java.io._
 
 class ResettableHttpEntity(entity: HttpEntity, maxExcerpt: Int) extends HttpEntityWrapper(entity) {
-  
+
   private val origIsRepeatable = entity.isRepeatable
   private val origContent = entity.getContent
 
@@ -17,7 +17,7 @@ class ResettableHttpEntity(entity: HttpEntity, maxExcerpt: Int) extends HttpEnti
     }
 
   override def getContent = content
-  
+
   override def isRepeatable = true
 
 }

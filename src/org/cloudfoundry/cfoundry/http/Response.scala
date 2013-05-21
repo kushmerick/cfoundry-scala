@@ -25,7 +25,7 @@ class Response(code: Option[Int] = None, _payload: Option[Payload] = None) {
 }
 
 object Response {
-  
+
   def apply(r: org.apache.http.HttpResponse) = create(r)
 
   private def create(r: org.apache.http.HttpResponse) = {

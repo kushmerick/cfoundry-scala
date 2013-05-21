@@ -12,7 +12,7 @@ class Sample {
 		String password = args[2];
 		Client client = new Client(target, logger());
 		client.login(username, password);
-		for (Resource service: JavaInterop.asResources(client.o("services"))) {
+		for (Resource service: client.o("services").asResources()) {
         	System.out.println(service);
 		}
 		client.logout();
