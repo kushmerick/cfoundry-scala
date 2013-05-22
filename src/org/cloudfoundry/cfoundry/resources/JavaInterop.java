@@ -19,7 +19,7 @@ public class JavaInterop {
 		scala.collection.Iterator<Resource> i = resources.iterator();
 		int j = 0;
 		while (i.hasNext()) {
-			result[j++] = i.next();
+			result[j++] = i.next(); // TODO: Avoid copying
 		}
 		return Arrays.asList(result);
 	}

@@ -8,14 +8,7 @@ trait ClassNameUtilities {
     c.getName.substring(c.getPackage.getName.length + 1)
   }
 
-  def removeCompanion$(x: String) = {
-    if (x.last == '$')
-      x.substring(0, x.length - 1)
-    else
-      x
-  }
-
-  def getClass(sibling: Class[_], className: String) = {
+ def getClass(sibling: Class[_], className: String) = {
     Class.forName(sibling.getPackage.getName + '.' + className)
   }
 

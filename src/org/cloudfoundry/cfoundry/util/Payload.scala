@@ -37,7 +37,7 @@ class Payload(val obj: Any) {
       Payload(_map(k))
     } catch {
       case x: NoSuchElementException => throw new MissingIndex(k, obj, x)
-      case x: ClassCastException => unexpectedType(cM, obj, x) // See [**//**]
+      case x: ClassCastException => unexpectedType(cM, obj, x) // See [++//++]
     }
   }
 
@@ -59,13 +59,12 @@ class Payload(val obj: Any) {
       Payload(_seq(i))
     } catch {
       case x: NoSuchElementException => throw new MissingIndex(i.toString, obj, x)
-      case x: ClassCastException => unexpectedType(cS, obj, x) // See [**//**]
+      case x: ClassCastException => unexpectedType(cS, obj, x) // See [++//++]
     }
   }
 
-  /* [**/
-  /**
-   * ] We might see a cast class exception, due to erasure; see
+  /*
+   * [++//++] We might see a cast class exception, due to erasure; see
    * http://www.scala-lang.org/api/current/index.html#scala.Any@asInstanceOf[T0]:T0
    */
 
