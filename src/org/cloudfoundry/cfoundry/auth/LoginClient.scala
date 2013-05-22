@@ -15,7 +15,7 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
       "username" -> username,
       "password" -> password)
     val payload = Some(new Payload(content.formEncode))
-    val response = crud.create("oauth/token")(LOGIN_OPTIONS)(payload)
+    val response = crud.create("/oauth/token")(LOGIN_OPTIONS)(payload)
     if (response.ok) {
       new Token(response.payload)
     } else {

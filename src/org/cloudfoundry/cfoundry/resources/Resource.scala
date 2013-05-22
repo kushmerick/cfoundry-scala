@@ -14,15 +14,14 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
 
   val inflector = new Inflector
 
-  var logger: Logger = null
-
-  // than make these global, these are set at the root by Client, then propogated
+  // rather than make these global, these are set at the root by Client, then propagated
   // to all children by Factory.create.  is this hacky or elegant?
+  var logger: Logger = null
   var crud: CRUD = null
   var tokenProvider: TokenProvider = null
 
   private val properties = Map[String, Property]()
-  private val children = Map[String, Class[_]]() // TODO: We never actually use the class?!
+  private val children = Set[String]()
 
   private var data: Map[String, Payload] = Map[String, Payload]()
 
@@ -50,12 +49,10 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
   //// children (ditto)
 
   protected def one_to_many(childName: String, root: Boolean = false) = {
-    val childClassName = inflector.capitalize(childName)
-    val childClass = getClass(classOf[Resource], childClassName)
     val childrenName = inflector.pluralize(childName)
-    children += childrenName -> childClass
-    val rootUrl = if (root) childrenRootUrl(childrenName) else null
-    property(childrenUrlPropertyName(childrenName), source = childrenUrlSource(childrenName), default = Some(rootUrl))
+    children += childrenName
+    val rootUrl = if (root) Some(childrenRootUrl(childrenName)) else None
+    property(childrenUrlPropertyName(childrenName), source = childrenUrlSource(childrenName), default = rootUrl)
   }
 
   private def childrenUrlPropertyName(childrenName: String) = {
@@ -219,7 +216,7 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
   private val METADATA = "metadata"
   private val ENTITY = "entity"
   private val ID = "id"
-  private val API_PREFIX = "v2"
+  private val API_PREFIX = "/v2"
   private val NEXT_URL = "next_url"
 
   //// just for debugging

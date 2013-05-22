@@ -49,8 +49,8 @@ class CRUD(var endpoint: String, val logger: Logger = null) {
 
   def makePath(path: Path) = {
     path
-      .map(component => component match { case Left(s) => s; case Right(sseq) => sseq.mkString("/") })
-      .mkString("/")
+    .map(component => component match { case Left(s) => s; case Right(sseq) => sseq.mkString("/") })
+    .mkString("/")
   }
 
   ////////////////////
@@ -146,7 +146,7 @@ class CRUD(var endpoint: String, val logger: Logger = null) {
   /////////////////////
 
   if (endpoint == null) throw new NoEndpoint
-  if (endpoint.last != '/') endpoint += '/'
+  if (endpoint.last == '/') endpoint = endpoint.substring(0, endpoint.length)
 
   /////////////////////
 

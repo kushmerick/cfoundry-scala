@@ -39,7 +39,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   }
 
   private def discoverEndpoint(endpointKey: String) = {
-    val response = crud.read("info")()
+    val response = crud.read("/info")()
     if (response.ok) {
       response.payload(endpointKey).string
     } else {
@@ -49,7 +49,6 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   //// constants
 
-  private val V2 = "v2"
   private val LOGIN_ENDPOINT = "authorization_endpoint"
   private val UAA_ENDPOINT = "token_endpoint"
 
