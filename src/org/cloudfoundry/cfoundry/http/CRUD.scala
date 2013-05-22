@@ -60,7 +60,13 @@ class CRUD(var endpoint: String, val logger: Logger = null) {
   private def execute[T <: HttpRequestBase](classs: Class[T], path: Path, options: Option[Pairs]) = {
     val request = makeRequest(classs, path, options)
     trace(request)
-    val response = new ResettableHttpResponse(httpClient.execute(request), excerptLength)
+    var response: HttpResponse = null
+    try {
+      response = httpClient.execute(request)
+    } catch {
+      case x: Exception => throw new HTTPFailure(x)
+    }
+    response = new ResettableHttpResponse(response, excerptLength)
     trace(response)
     Response(response)
   }

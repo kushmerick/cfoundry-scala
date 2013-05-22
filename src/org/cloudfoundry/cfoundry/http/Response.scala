@@ -35,6 +35,8 @@ object Response {
       istream = r.getEntity.getContent
       val payload = new Payload(JSON.deserialize(istream))
       new Response(Some(code), Some(payload))
+    } catch {
+      case x: Exception => throw new InvalidResponse(code, x)
     } finally {
       if (istream != null) istream.close
     }

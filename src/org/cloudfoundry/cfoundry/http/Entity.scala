@@ -5,6 +5,8 @@ import java.nio.charset._
 import org.apache.http._
 import org.apache.http.entity._
 
+/* this functionality is only used for logging/debugging */
+
 object Entity {
 
   def excerpt(request: HttpEntityEnclosingRequest, maxLength: Int): String = excerpt(request.getEntity, maxLength)
@@ -23,7 +25,8 @@ object Entity {
     } else {
       var charset = ContentType.getOrDefault(entity).getCharset
       if (charset == null) charset = UTF8 // sometimes "getOrDefault" doesn't
-      new String(buf, 0, nread, charset)
+      val ellipsis = if (nread == maxLength) "..." else ""
+      new String(buf, 0, nread, charset) + ellipsis
     }
   }
 
