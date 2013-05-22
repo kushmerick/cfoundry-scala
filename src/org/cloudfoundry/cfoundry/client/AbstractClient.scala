@@ -27,6 +27,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// properties
 
   one_to_many("service", root = true)
+  one_to_many("servicePlan", root = true)
 
   //// login
 

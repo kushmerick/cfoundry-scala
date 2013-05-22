@@ -51,20 +51,21 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
   protected def one_to_many(childName: String, root: Boolean = false) = {
     val childrenName = inflector.pluralize(childName)
     children += childrenName
-    val rootUrl = if (root) Some(childrenRootUrl(childrenName)) else None
-    property(childrenUrlPropertyName(childrenName), source = childrenUrlSource(childrenName), default = rootUrl)
+    val children_name = inflector.camelToUnderline(childrenName)
+    val rootUrl = if (root) Some(childrenRootUrl(children_name)) else None
+    property(childrenUrlPropertyName(childrenName), source = childrenUrlSource(children_name), default = rootUrl)
   }
 
   private def childrenUrlPropertyName(childrenName: String) = {
     childrenName + "URL"
   }
 
-  private def childrenUrlSource(childrenName: String) = {
-    inflector.camelToUnderline(childrenName) + "_url"
+  private def childrenUrlSource(children_name: String) = {
+    children_name + "_url"
   }
 
-  private def childrenRootUrl(childrenName: String) = {
-    API_PREFIX + '/' + inflector.camelToUnderline(childrenName)
+  private def childrenRootUrl(children_name: String) = {
+    API_PREFIX + '/' + children_name
   }
 
   private def hasChildren(childrenName: String) = {

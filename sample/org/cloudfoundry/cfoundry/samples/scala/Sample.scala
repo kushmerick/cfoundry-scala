@@ -12,13 +12,14 @@ object Sample extends App {
   val client: Client = new Client(target, logger)
 
   client.login(username, password)
-
+  for (servicePlan <- client.servicePlans) {
+      Console.println(s"Service plan ${servicePlan}")
+  }
   for (service <- client.services) {
     for (servicePlan <- service.servicePlans) {
       Console.println(s"Service ${service} has plan ${servicePlan}")
     }
   }
-
   client.logout
 
   private def arguments = {

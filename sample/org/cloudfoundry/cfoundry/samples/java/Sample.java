@@ -12,6 +12,9 @@ class Sample {
 		String password = args[2];
 		Client client = new Client(target, logger());
 		client.login(username, password);
+		for (Resource servicePlan : client.o("servicePlans").asResources()) {
+			System.out.println("Service plan " + servicePlan);
+		}
 		for (Resource service : client.o("services").asResources()) {
 			for (Resource servicePlan : service.o("servicePlans").asResources()) {
 				System.out.println("Service " + service + " has plan "
