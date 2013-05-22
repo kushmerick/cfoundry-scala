@@ -1,8 +1,9 @@
-package org.cloudfoundry.cfoundry.resources
+package org.cloudfoundry.cfoundry.util
 
-object Inflector {
+class Inflector {
 
   def isPlural(noun: String) = noun.last == S
+
   def isSingular(noun: String) = !isPlural(noun)
 
   def singularize(noun: String) = {

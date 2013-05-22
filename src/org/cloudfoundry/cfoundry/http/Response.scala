@@ -19,7 +19,7 @@ class Response(code: Option[Int] = None, _payload: Option[Payload] = None) {
   override def toString = {
     val c = code match { case Some(c) => c; case None => "-" }
     val s = if (ok) "ok" else "error"
-    s"<Response $c ($s): ${payload.pretty}>"
+    s"<Response $c ($s): ${payload.toString}>"
   }
 
 }

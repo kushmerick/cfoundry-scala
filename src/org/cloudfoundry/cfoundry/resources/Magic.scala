@@ -9,8 +9,6 @@ abstract class Magic {
     case _ => throw new PropertyChildConfusion("res", this)
   }
 
-  def asResources: java.lang.Iterable[Resource] = JavaInterop.asResources(this)
-
   def resources = this match {
     case MagicResources(s) => s
     case _ => throw new PropertyChildConfusion("ress", this)
@@ -20,6 +18,16 @@ abstract class Magic {
     case MagicProp(v) => v
     case _ => throw new PropertyChildConfusion("prop", this)
   }
+
+  // sugar for Java
+
+  def asResources: java.lang.Iterable[Resource] = {
+    // TODO: This jump into Java is to prevent type parameters from
+    // getting lost.  Is that really necessary?!
+    JavaInterop.asResources(this)
+  }
+
+  // just for debugging
 
   override def toString = {
     "<Magic: " + (this match {

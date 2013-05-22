@@ -9,7 +9,9 @@ https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry
     val client: Client = new Client(target)
     client.login(username, password)
     for (service <- client.services) {
-      ...
+      for (servicePlan <- service.servicePlans) {
+        ...
+      }
     }
     client.logout
 
@@ -20,6 +22,9 @@ https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry
     Client client = new Client(target);
     client.login(username, password);
     for (Resource service: client.o("services").asResources()) {
-      ...
+      for (Resource servicePlan : service.o("servicePlans").asResources()) {
+        ...
+      }
     }
     client.logout();
+ 

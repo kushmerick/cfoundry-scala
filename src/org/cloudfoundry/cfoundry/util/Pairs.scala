@@ -8,7 +8,7 @@ class Pairs(val pairs: Map[String, String]) {
 
   def foreach(f: ((String, String)) => Any) = pairs.foreach(f)
   def iterator = pairs.iterator
-  def filter(f: ((String, String)) => Boolean) = pairs.filter(f)
+  def withFilter(f: ((String, String)) => Boolean) = pairs.withFilter(f)
 
   import Pairs._
 

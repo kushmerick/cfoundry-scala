@@ -130,7 +130,7 @@ class CRUD(var endpoint: String, val logger: Logger = null) {
 
   private def trace(message: String): Unit = {
     if (logger != null) {
-      logger.fine(s"${CRUD.CRUD}: ${message}")
+      logger.fine(s"${getClass.getName}: ${message}")
     }
   }
 
@@ -159,8 +159,6 @@ object CRUD {
   def factory(base: String, logger: Logger = null) = new CRUD(base, logger)
 
   val FORM_ENCODED = "application/x-www-form-urlencoded"
-
-  val CRUD = getClass.getName
 
   private val JSON = "application/json"
 

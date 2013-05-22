@@ -15,10 +15,8 @@ trait ClassNameUtilities {
       x
   }
 
-  def getClassQualification: String = getClassQualification(getClass)
-
-  def getClassQualification(c: Class[_]) = {
-    c.getPackage.getName.replace('/', '.')
+  def getClass(sibling: Class[_], className: String) = {
+    Class.forName(sibling.getPackage.getName + '.' + className)
   }
 
 }

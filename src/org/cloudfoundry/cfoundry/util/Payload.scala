@@ -19,9 +19,7 @@ import scala.reflect.runtime.universe._
 
 class Payload(val obj: Any) {
 
-  import Payload._
-
-  /////////
+  //// map
 
   private type M = Map[String, Any]
   private lazy val cM = classOf[M]
@@ -43,7 +41,7 @@ class Payload(val obj: Any) {
     }
   }
 
-  /////////
+  //// seq
 
   private type S = Seq[Any]
   private lazy val cS = classOf[S]
@@ -71,7 +69,7 @@ class Payload(val obj: Any) {
    * http://www.scala-lang.org/api/current/index.html#scala.Any@asInstanceOf[T0]:T0
    */
 
-  // Values
+  //// values
 
   def double = as[Double](classOf[Double])
 
@@ -90,7 +88,7 @@ class Payload(val obj: Any) {
     })
   }
 
-  //////////////
+  ////
 
   private def as[T](c: Class[_]) = {
     try {
@@ -100,19 +98,6 @@ class Payload(val obj: Any) {
     }
   }
 
-  private def unexpectedType(c: Class[_], obj: Any, cause: Exception) = throw new UnexpectedType(c, obj, cause)
-
-  lazy val pretty: String = obj match {
-    case m: M => map.map({ case (k, v) => s"${k}: ${v.pretty}" }).mkString("{", ", ", "}")
-    case a: S => seq.map(x => x.pretty).mkString("[", ", ", "]")
-    case s: String => "\"" + s + "\""
-    case x => x.toString
-  }
-
-  override def toString = pretty
-
-  /////////////
-
   private lazy val mirror = runtimeMirror(getClass.getClassLoader).reflect(this)
 
   def as(typ: String) = {
@@ -120,12 +105,27 @@ class Payload(val obj: Any) {
     mirror.reflectMethod(method)()
   }
 
+  private def unexpectedType(c: Class[_], obj: Any, cause: Exception) = throw new UnexpectedType(c, obj, cause)
+
+  //// constants
+
+  private lazy val TRUEs = List("true", "yes", "y", "1")
+
+  //// just for debugging
+
+  override def toString = asString
+
+  private lazy val asString: String = obj match {
+    case m: M => map.map({ case (k, v) => s"${k}: ${v.toString}" }).mkString("{", ", ", "}")
+    case a: S => seq.map(x => x.toString).mkString("[", ", ", "]")
+    case s: String => "\"" + s + "\""
+    case x => x.toString
+  }
+
 }
 
 object Payload {
 
   def apply(x: Any) = new Payload(x)
-
-  private lazy val TRUEs = List("true", "yes", "y", "1")
 
 }

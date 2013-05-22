@@ -7,6 +7,6 @@ class Service extends Resource {
   property("version")
   property("active", typ = "bool")
 
-  // one_to_many("servicePlan")
+  one_to_many("servicePlan")
 
 }
