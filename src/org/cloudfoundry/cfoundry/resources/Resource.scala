@@ -4,39 +4,54 @@ import org.cloudfoundry.cfoundry.auth._
 import org.cloudfoundry.cfoundry.http._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
+import org.cloudfoundry.cfoundry.client._
 import scala.collection.mutable._
 import scala.language.dynamics
+import scala.beans._
 import java.util.logging._
 
-class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
+class Resource(@BeanProperty var client: ClientContext)
+  extends Dynamic with ClassNameUtilities {
+
+  //// constants
+
+  private val id = "id"
+  private val url = "url"
+  private val LOCAL_RESOURCE_SENTINEL = "LOCAL_RESOURCE_SENTINEL"
+
+  //// client context
+
+  private def crud = client.getCrud
+  private def inflector = client.getInflector
+  private def logger = client.getLogger
+  private def token = client.getToken
 
   //// state
 
-  val inflector = new Inflector
-
-  // rather than make these global, these are set at the root by Client, then propagated
-  // to all children by Factory.create.  is this hacky or elegant?
-  var logger: Logger = null
-  var crud: CRUD = null
-  var tokenProvider: TokenProvider = null
-
   private val properties = Map[String, Property]()
+  private val data: Map[String, Payload] = Map[String, Payload]()
+
   private val children = Set[String]()
+  private val parents = Set[String]()
 
-  private var data: Map[String, Payload] = Map[String, Payload]()
+  private var isDirty: Boolean = false
 
-  //// every resource has these properties, though subclasses might
+  //// most resources have these properties, though subclasses might
   //// declare the property again, for example to override 'source'
 
-  property("id", source = "guid")
+  property(id, source = "guid", default = Some(LOCAL_RESOURCE_SENTINEL))
   property("name")
   property("description")
+  property(url)
 
   //// properties (TODO: should be 'static', but can't just move them to
   //// a companion object due to subclassing.)
 
-  protected def property(name: String, typ: String = "string", source: String = null, filter: Filter = null, default: Option[Any] = None) = {
-    properties += name -> new Property(name, typ, source, filter, default)
+  protected def property(name: String, typ: String = "string", source: String = null, filter: Filter = null, default: Option[Any] = None, applicable: Boolean = true) = {
+    if (applicable)
+      properties += name -> new Property(name, typ, source, filter, default)
+    else
+      properties -= name
   }
 
   private def hasProperty(name: String) = properties.contains(name)
@@ -48,37 +63,47 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
 
   //// children (ditto)
 
-  protected def one_to_many(childName: String, root: Boolean = false) = {
+  protected def hasMany(childName: String) = {
     val childrenName = inflector.pluralize(childName)
     children += childrenName
     val children_name = inflector.camelToUnderline(childrenName)
-    val rootUrl = if (root) Some(childrenRootUrl(children_name)) else None
-    property(childrenUrlPropertyName(childrenName), source = childrenUrlSource(children_name), default = rootUrl)
+    val absolutePath = if (isInstanceOf[ClientContext]) Some(childrenAbsolutePath(children_name)) else None
+    property(childrenPathPropertyName(childrenName), source = childrenPathSource(children_name), default = absolutePath)
   }
 
-  private def childrenUrlPropertyName(childrenName: String) = {
+  private def childrenPathPropertyName(childrenName: String) = {
+    // ServiceInstancesURL; note that it's an absolute path not a URL,
+    // but we'll use "URL" because CC calls it a "URL"
     childrenName + "URL"
   }
 
-  private def childrenUrlSource(children_name: String) = {
+  private def childrenPathSource(children_name: String) = {
+    // service_instances_url; note that CF sends an absolute path not a URL 
     children_name + "_url"
   }
 
-  private def childrenRootUrl(children_name: String) = {
-    API_PREFIX + '/' + children_name
+  private def childrenAbsolutePath(children_name: String) = {
+    // /v2/service_instances
+    absolutePath(children_name)
   }
 
-  private def hasChildren(childrenName: String) = {
+  protected def hasChildren(childrenName: String) = {
     children.contains(childrenName)
+  }
+
+  //// parents (ditto)
+
+  protected def hasA(parentName: String) = {
+    parents += parentName
   }
 
   //// loading from a cRud response
 
   def fromPayload(payload: Payload): Resource = {
-    fromPayload(payload, METADATA, ENTITY)
+    fromPayload(payload, Seq("metadata", "entity"))
   }
 
-  private def fromPayload(payload: Payload, keys: String*) = {
+  private def fromPayload(payload: Payload, keys: Seq[String]) = {
     for (key <- keys) {
       ingest(payload(key))
     }
@@ -93,8 +118,29 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
         else
           propertyForSource(key) match { case Some(property) => property.name; case None => null }
       if (propertyName != null)
-        data.put(propertyName, value)
+        setData(propertyName, value)
     }
+  }
+
+  //// save = create if resource does not exist on the server, or update if it does
+
+  def save = {
+    if (isLocalOnly) {
+      Crud
+    } else if (isDirty) {
+      crUd
+    }
+    isDirty = false
+  }
+
+  def isLocalOnly = {
+    getData[String]("id") == LOCAL_RESOURCE_SENTINEL
+  }
+
+  //// delete
+
+  def delete = {
+    if (!isLocalOnly) cruD
   }
 
   //// property values
@@ -125,6 +171,10 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
     }
   }
 
+  def setData(propertyName: String, value: Payload) = {
+    data.put(propertyName, value)
+  }
+
   //// model magic via dynamic invocation
 
   def applyDynamic(noun: String)(args: Any*) = {
@@ -134,6 +184,7 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
       // etc
       selectDynamic(noun)
     } else {
+      // why do we end up here not magic?
       throw new UnexpectedArguments(noun, args)
     }
   }
@@ -150,12 +201,12 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
           // service.servicePlan
           logger.fine(s"Creating a new '${noun}' child of resource ${this}")
           // TODO: Link child & parent
-          MagicResource(create(factory))
+          MagicResource(factory.create)
         } else {
           // service.servicePlans
-          logger.fine(s"Enumerating '${noun}' children of resource ${this}")
-          val path = getData[String](childrenUrlPropertyName(noun))
           // TODO: Link children & parent
+          logger.fine(s"Enumerating '${noun}' children of resource ${this}")
+          val path = getData[String](childrenPathPropertyName(noun))
           MagicResources(enumerate(factory, path))
         }
       } else {
@@ -164,7 +215,7 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
     }
   }
 
-  def updateDynamic(noun: String, value: Any) = {
+  def updateDynamic(noun: String)(value: Any) = {
     // TODO
   }
 
@@ -177,48 +228,66 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
   //// child creation & enumeration
 
   private def factoryFor(noun: String) = {
-    new Factory(noun, crud, tokenProvider, inflector, logger)
-  }
-
-  private def create(factory: Factory) = {
-    factory.create
+    new Factory(noun, client)
   }
 
   private def enumerate(factory: Factory, _path: String): Seq[Resource] = {
     var path = _path
     val resources = new ArrayBuilder.ofRef[Resource]
     do {
-      val payload = read(path)
-      resources ++= payload(RESOURCES).seq.map(resourcePayload => factory.create(resourcePayload))
-      path = payload(NEXT_URL).string
+      val payload = perform(() => crud.read(path)(options))
+      resources ++= payload("resources").seq.map(resourcePayload => factory.create(resourcePayload))
+      path = payload("next_url").string
     } while (path != null)
     resources.result
   }
 
+  //// absolute paths such as /v2/service_instances
+
+  private def absolutePath(): String = {
+    absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))
+  }
+
+  private def absolutePath(plural_class_name: String = null) = {
+    s"/v2/${plural_class_name}"
+  }
+
   ///// CRUD operations
 
-  private def read(path: String) = {
-    var path2 = Buffer(path)
-    val response = crud.read(path2)(options)
+  private def Crud = {
+    // TODO
+    val payload: Payload = null
+    perform(() => crud.create(absolutePath)(options)(Some(payload)))
+  }
+
+  private def cRud = {
+    perform(() => crud.read(getUrl)(options))
+  }
+
+  private def crUd = {
+    // TODO
+    val payload: Payload = null
+    perform(() => crud.update(getUrl)(options)(Some(payload)))
+  }
+
+  private def cruD = {
+    perform(() => crud.delete(getUrl)(options))
+  }
+
+  private def getUrl = getData[String](url)
+
+  private def options = {
+    Some(Pairs(
+      "Authorization" -> token.auth_header))
+  }
+
+  private def perform(performer: () => Response) = {
+    val response = performer()
     if (response.ok)
       response.payload
     else
       throw new BadResponse(response)
   }
-
-  private def options = {
-    Some(Pairs(
-      "Authorization" -> tokenProvider.getToken.auth_header))
-  }
-
-  //// constants
-
-  private val RESOURCES = "resources"
-  private val METADATA = "metadata"
-  private val ENTITY = "entity"
-  private val ID = "id"
-  private val API_PREFIX = "/v2"
-  private val NEXT_URL = "next_url"
 
   //// just for debugging
 
@@ -228,7 +297,7 @@ class Resource extends Dynamic with ClassNameUtilities with TokenProvider {
       Payload(
         properties
           .values
-          .filter(property => hasData(property))
+          .filter(property => property.hasDefault || hasData(property))
           .map(property => (property.name -> getData(property)))
           .toMap)
       .toString

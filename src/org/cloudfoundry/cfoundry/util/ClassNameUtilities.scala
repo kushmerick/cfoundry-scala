@@ -1,5 +1,7 @@
 package org.cloudfoundry.cfoundry.util
 
+import scala.collection.mutable._
+
 trait ClassNameUtilities {
 
   def getBriefClassName: String = getBriefClassName(getClass)
@@ -8,8 +10,8 @@ trait ClassNameUtilities {
     c.getName.substring(c.getPackage.getName.length + 1)
   }
 
- def getClass(sibling: Class[_], className: String) = {
-    Class.forName(sibling.getPackage.getName + '.' + className)
+  def getClass(siblingClass: Class[_], className: String) = {
+    Class.forName(siblingClass.getPackage.getName + '.' + className)
   }
 
 }

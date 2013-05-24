@@ -22,14 +22,12 @@ class Payload(val obj: Any) {
   //// map
 
   private type M = Map[String, Any]
-  private lazy val cM = classOf[M]
-
-  private lazy val _map = as[M](cM)
+  private lazy val _map = as[M]
 
   def map = try {
     _map.map(pair => (pair._1, new Payload(pair._2)))
   } catch {
-    case x: ClassCastException => unexpectedType(cM, obj, x) // See [**//**]
+    case x: ClassCastException => unexpectedType(obj, x) // See [**//**]
   }
 
   def apply(k: String) = {
@@ -37,21 +35,19 @@ class Payload(val obj: Any) {
       Payload(_map(k))
     } catch {
       case x: NoSuchElementException => throw new MissingIndex(k, obj, x)
-      case x: ClassCastException => unexpectedType(cM, obj, x) // See [++//++]
+      case x: ClassCastException => unexpectedType(obj, x) // See [++//++]
     }
   }
 
   //// seq
 
   private type S = Seq[Any]
-  private lazy val cS = classOf[S]
-
-  private lazy val _seq = as[S](cS)
+  private lazy val _seq = as[S]
 
   def seq = try {
     _seq.map(x => new Payload(x))
   } catch {
-    case x: ClassCastException => unexpectedType(cS, obj, x) // See [**//**]
+    case x: ClassCastException => unexpectedType(obj, x) // See [**//**]
   }
 
   def apply(i: Int) = {
@@ -59,7 +55,7 @@ class Payload(val obj: Any) {
       Payload(_seq(i))
     } catch {
       case x: NoSuchElementException => throw new MissingIndex(i.toString, obj, x)
-      case x: ClassCastException => unexpectedType(cS, obj, x) // See [++//++]
+      case x: ClassCastException => unexpectedType(obj, x) // See [++//++]
     }
   }
 
@@ -70,11 +66,11 @@ class Payload(val obj: Any) {
 
   //// values
 
-  def double = as[Double](classOf[Double])
+  def double = as[Double]
 
   def int = double.toInt
 
-  def string = as[String](classOf[String])
+  def string = as[String]
 
   lazy val isNull = obj == null
 
@@ -89,22 +85,23 @@ class Payload(val obj: Any) {
 
   ////
 
-  private def as[T](c: Class[_]) = {
-    try {
-      obj.asInstanceOf[T]
-    } catch {
-      case x: ClassCastException => unexpectedType(c, obj, x)
-    }
+  private def as[T] = try {
+    // c is just to make the exception more helpful
+    obj.asInstanceOf[T]
+  } catch {
+    case x: Exception => unexpectedType(obj, x)
   }
 
+  // TODO: Is this right?  Working fine but....
   private lazy val mirror = runtimeMirror(getClass.getClassLoader).reflect(this)
-
-  def as(typ: String) = {
+  def as(typ: String) = try {
     val method = mirror.symbol.typeSignature.member(newTermName(typ)).asMethod
     mirror.reflectMethod(method)()
+  } catch {
+    case x: Exception => unexpectedType(obj, x)
   }
 
-  private def unexpectedType(c: Class[_], obj: Any, cause: Exception) = throw new UnexpectedType(c, obj, cause)
+  private def unexpectedType(obj: Any, cause: Exception) = throw new UnexpectedType(obj, cause)
 
   //// constants
 

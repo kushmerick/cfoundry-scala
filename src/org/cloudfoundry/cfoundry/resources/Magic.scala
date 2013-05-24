@@ -19,6 +19,19 @@ abstract class Magic {
     case _ => throw new PropertyChildConfusion("prop", this)
   }
 
+  def isNull = prop == null
+
+  def int = convert(() => prop.asInstanceOf[Int])
+  def double = convert(() => prop.asInstanceOf[Double])
+  def bool = convert(() => prop.asInstanceOf[Boolean])
+  def string = convert(() => prop.asInstanceOf[String])
+
+  private def convert[T](converter: () => T): T = try {
+    converter()
+  } catch {
+    case x: Exception => throw new UnexpectedType(this, x)
+  }
+
   // sugar for Java
 
   def asResources: java.lang.Iterable[Resource] = {

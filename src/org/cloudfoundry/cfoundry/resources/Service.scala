@@ -1,12 +1,13 @@
 package org.cloudfoundry.cfoundry.resources
 
-class Service extends Resource {
+import org.cloudfoundry.cfoundry.client._
+
+class Service(client: ClientContext) extends Resource(client) {
 
   property("name", source = "label")
   property("provider")
   property("version")
   property("active", typ = "bool")
-
-  one_to_many("servicePlan")
+  hasMany("servicePlan")
 
 }

@@ -3,30 +3,27 @@ package org.cloudfoundry.cfoundry.resources
 import org.cloudfoundry.cfoundry.auth._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.http._
-import java.util.logging._
+import org.cloudfoundry.cfoundry.client._
+import java.lang.reflect.Constructor
 
-class Factory(noun: String, crud: CRUD, tokenProvider: TokenProvider, inflector: Inflector, logger: Logger) {
+class Factory(noun: String, client: ClientContext) {
 
-  lazy val plural = inflector.pluralize(noun)
-  private lazy val singular = inflector.singularize(noun)
-  private lazy val Singular = inflector.capitalize(singular)
+  private def inflector = client.getInflector
+
+  def plural = inflector.pluralize(noun)
 
   private def resourceClass: Class[_] = {
-    Class.forName(s"${PACKAGE_NAME}.${Singular}")
+    val Singular = inflector.capitalize(inflector.singularize(noun))
+    val packageName = getClass.getPackage.getName
+    Class.forName(s"${packageName}.${Singular}")
   }
 
   def create: Resource = {
-    val resource = resourceClass.newInstance.asInstanceOf[Resource]
-    resource.crud = crud
-    resource.tokenProvider = tokenProvider
-    resource.logger = logger
-    resource
+    resourceClass.getConstructors()(0).newInstance(client).asInstanceOf[Resource]
   }
 
   def create(payload: Payload): Resource = {
     create.fromPayload(payload)
   }
-
-  private lazy val PACKAGE_NAME = getClass.getPackage.getName
 
 }

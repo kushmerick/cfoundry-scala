@@ -12,7 +12,7 @@ class ClientSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   val logger = Logger.getGlobal
   logger.addHandler(new ConsoleHandler)
   logger.setLevel(Level.FINEST)
-  
+
   class MockedClient(target: String) extends AbstractClient[MockCRUD](MockCRUD.factory, target, logger)
 
   var client: MockedClient = null

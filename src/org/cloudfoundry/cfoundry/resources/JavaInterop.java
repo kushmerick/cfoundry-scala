@@ -7,7 +7,8 @@ public class JavaInterop {
 	}
 
 	public static java.lang.Iterable<Resource> asResources(Magic magic) {
-		return scala.collection.JavaConversions.asJavaIterable(magic.resources());
+		return scala.collection.JavaConversions.asJavaIterable(magic
+				.resources());
 	}
 
 }

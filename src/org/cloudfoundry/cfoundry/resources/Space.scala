@@ -2,9 +2,9 @@ package org.cloudfoundry.cfoundry.resources
 
 import org.cloudfoundry.cfoundry.client._
 
-class ServicePlan(client: ClientContext) extends Resource(client) {
+class Space(client: ClientContext) extends Resource(client) {
 
-  hasA("service")
+  hasA("organization")
   hasMany("serviceInstance")
 
 }
