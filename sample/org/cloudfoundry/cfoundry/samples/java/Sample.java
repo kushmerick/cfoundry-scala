@@ -19,8 +19,13 @@ class Sample {
 		}
 		for (Resource service : client.o("services").asResources()) {
 			for (Resource servicePlan : service.o("servicePlans").asResources()) {
-				System.out.println("Service " + service + " has plan "
-						+ servicePlan);
+				for (Resource serviceInstance : servicePlan.o(
+						"serviceInstances").asResources()) {
+					System.out
+							.println("Service " + service + " has plan "
+									+ servicePlan + " with instance "
+									+ serviceInstance);
+				}
 			}
 		}
 		client.logout();

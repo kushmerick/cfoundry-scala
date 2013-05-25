@@ -1,22 +1,23 @@
 package org.cloudfoundry.cfoundry.resources
 
 import org.cloudfoundry.cfoundry.exceptions._
+import scala.language.dynamics
 
-abstract class Magic {
+abstract class Magic extends Dynamic {
 
   def resource = this match {
     case MagicResource(r) => r
-    case _ => throw new PropertyChildConfusion("res", this)
+    case _ => throw new PropertyResourceConfusion("resource", this)
   }
 
   def resources = this match {
     case MagicResources(s) => s
-    case _ => throw new PropertyChildConfusion("ress", this)
+    case _ => throw new PropertyResourceConfusion("resources", this)
   }
 
   def prop = this match {
     case MagicProp(v) => v
-    case _ => throw new PropertyChildConfusion("prop", this)
+    case _ => throw new PropertyResourceConfusion("prop", this)
   }
 
   def isNull = prop == null
@@ -31,6 +32,12 @@ abstract class Magic {
   } catch {
     case x: Exception => throw new UnexpectedType(this, x)
   }
+
+  // allow magic like client.services.servicePlan etc
+
+  def selectDynamic(noun: String) = resource.selectDynamic(noun)
+  def applyDynamic(noun: String)(args: Any*) = resource.doApplyDynamic(noun, args)
+  def updateDynamic(noun: String)(value: Any) = resource.updateDynamic(noun)(value)
 
   // sugar for Java
 

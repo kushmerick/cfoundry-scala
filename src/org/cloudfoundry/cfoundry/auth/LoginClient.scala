@@ -5,7 +5,7 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
 
-class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoint: String, logger: Logger) {
+class LoginClient[TCRUD <: AbstractCRUD](crudFactory: (String, Logger) => TCRUD, endpoint: String, logger: Logger) {
 
   private val crud = crudFactory(endpoint, logger)
 
@@ -15,7 +15,7 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
       "username" -> username,
       "password" -> password)
     val payload = Some(new Payload(content.formEncode))
-    val response = crud.create("/oauth/token")(LOGIN_OPTIONS)(payload)
+    val response = crud.Crud("/oauth/token")(LOGIN_OPTIONS)(payload)
     if (response.ok) {
       new Token(response.payload)
     } else {

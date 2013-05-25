@@ -28,7 +28,7 @@ trait ClientContext {
   //// crud
 
   @BeanProperty
-  protected var crud: CRUD = null
+  protected var crud: AbstractCRUD = null
 
   //// logger
 

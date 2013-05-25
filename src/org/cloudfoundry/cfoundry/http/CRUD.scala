@@ -12,45 +12,22 @@ import org.apache.http.impl.client._
 import org.apache.http.client.methods._
 import org.apache.http.entity._
 
-class CRUD(var endpoint: String, val logger: Logger = null) {
+class CRUD(var _endpoint: String, val _logger: Logger = null) extends AbstractCRUD(_endpoint, _logger) {
 
-  def create(path: PathComponent*)(options: Option[Pairs] = None)(payload: Option[Payload] = None): Response = {
-    create(path, options, payload)
-  }
-  def create(path: Path, options: Option[Pairs], payload: Option[Payload]): Response = {
+  override def Crud(path: Path, options: Option[Pairs], payload: Option[Payload]): Response = {
     execute(classOf[HttpPost], path, options, payload)
   }
 
-  def read(path: PathComponent*)(options: Option[Pairs] = None): Response = {
-    read(path, options)
-  }
-  def read(path: Path, options: Option[Pairs]): Response = {
+  override def cRud(path: Path, options: Option[Pairs]): Response = {
     execute(classOf[HttpGet], path, options)
   }
 
-  def update(path: PathComponent*)(options: Option[Pairs] = None)(payload: Option[Payload] = None): Response = {
-    update(path, options, payload)
-  }
-  def update(path: Path, options: Option[Pairs], payload: Option[Payload]): Response = {
+  override def crUd(path: Path, options: Option[Pairs], payload: Option[Payload]): Response = {
     execute(classOf[HttpPut], path, options, payload)
   }
 
-  def delete(path: PathComponent*)(options: Option[Pairs] = None): Response = {
-    delete(path, options)
-  }
-  def delete(path: Path, options: Option[Pairs]): Response = {
+  override def cruD(path: Path, options: Option[Pairs]): Response = {
     execute(classOf[HttpDelete], path, options)
-  }
-
-  ////////////////////
-
-  type PathComponent = Either[String, Iterable[String]]
-  type Path = Iterable[PathComponent]
-
-  def makePath(path: Path) = {
-    path
-      .map(component => component match { case Left(s) => s; case Right(sseq) => sseq.mkString("/") })
-      .mkString("/")
   }
 
   ////////////////////
@@ -127,16 +104,16 @@ class CRUD(var endpoint: String, val logger: Logger = null) {
       val excerpt = Entity.excerpt(request.asInstanceOf[E], maxExcerpt)
       message += s"; payload=${excerpt}"
     }
-    trace(s">>>> ${message}")
+    trace(s">> ${message}")
   }
 
   private def trace(response: HttpResponse): Unit = {
-    trace(s"<<<< code=${response.getStatusLine.getStatusCode}, headers=${headers(response)}, payload=${Entity.excerpt(response, maxExcerpt)}")
+    trace(s"<< code=${response.getStatusLine.getStatusCode}, headers=${headers(response)}, payload=${Entity.excerpt(response, maxExcerpt)}")
   }
 
   private def trace(message: String): Unit = {
     if (logger != null) {
-      logger.fine(s"${getClass.getName}: ${message}")
+      logger.finer(s"${getClass.getName}: ${message}")
     }
   }
 
@@ -148,11 +125,6 @@ class CRUD(var endpoint: String, val logger: Logger = null) {
   }
 
   val maxExcerpt = 4096
-
-  /////////////////////
-
-  if (endpoint == null) throw new NoEndpoint
-  if (endpoint.last == '/') endpoint = endpoint.substring(0, endpoint.length)
 
   /////////////////////
 

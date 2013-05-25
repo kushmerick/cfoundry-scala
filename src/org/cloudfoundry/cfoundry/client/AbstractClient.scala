@@ -8,7 +8,7 @@ import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
 
-abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
+abstract class AbstractClient[TCRUD <: AbstractCRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
   extends ClientResource {
 
   //// client context
@@ -22,12 +22,18 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   //// properties
 
-  property("target", default = Some(target))
+  property("target", default = Some(target), readOnly = true)
+
+  property("cfoundry_scala_version", default = Some(Version.version), readOnly = true)
 
   private val CLOUDFOUNDRY_VERSION = "cloudfoundry_version"
-  property(CLOUDFOUNDRY_VERSION, typ = "int", default = Some("unknown"))
+  property(CLOUDFOUNDRY_VERSION, typ = "int", readOnly = true)
+  setData(CLOUDFOUNDRY_VERSION, info("version").int, ingesting = true)
 
-  property("cfoundry_scala_version", Version.version)
+  property("id", applicable = false)
+  property("name", applicable = false)
+  property("description", applicable = false)
+  property("url", applicable = false)
 
   //// every resource is a child of the client.  rather than register them all ahead
   //// of time, we do so on demand as they are requested.
@@ -58,14 +64,12 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   }
 
   private def discoverEndpoint(endpointKey: String) = {
-    val response = getCrud.read("/info")()
-    if (response.ok) {
-      setData(CLOUDFOUNDRY_VERSION, response.payload("version"))
-      response.payload(endpointKey).string
-    } else {
-      throw new BadResponse(response)
-    }
+    info(endpointKey).string
   }
+
+  //// info
+
+  private lazy val info = perform(() => getCrud.cRud("/info")())
 
   //// auth clients
 
@@ -76,5 +80,9 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   private val LOGIN_ENDPOINT = "authorization_endpoint"
   lazy private val loginClient: LoginClient[TCRUD] =
     new LoginClient[TCRUD](crudFactory, discoverEndpoint(LOGIN_ENDPOINT), logger)
+
+  //// just for debugging
+
+  override protected def toStringDecoration = ""
 
 }

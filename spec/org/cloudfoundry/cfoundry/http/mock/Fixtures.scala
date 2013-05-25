@@ -12,9 +12,9 @@ class Fixtures {
   class S2O2P2R extends AutovivifiedHashMap[String, O2P2R](() => new O2P2R)
   class S2O2R extends AutovivifiedHashMap[String, O2R](() => new O2R)
 
-  val create = new S2O2P2R
-  val read = new S2O2R
-  val update = new S2O2P2R
-  val delete = new S2O2R
+  val Crud = new S2O2P2R
+  val cRud = new S2O2R
+  val crUd = new S2O2P2R
+  val cruD = new S2O2R
 
 }

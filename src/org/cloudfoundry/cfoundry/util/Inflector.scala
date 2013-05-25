@@ -46,6 +46,20 @@ class Inflector {
     underline.result
   }
 
+  def underlineToCamel(underline: String) = {
+    val camel = new StringBuilder
+    var cap = false
+    for (c <- underline) {
+      if (c == U) {
+        cap = true
+      } else {
+        camel += (if (cap) c.toUpper else c)
+        cap = false
+      }
+    }
+    camel.result
+  }
+
   private val S = 's'
   private val U = '_'
 
