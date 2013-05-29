@@ -7,7 +7,9 @@ class ResettableHttpResponse(response: HttpResponse, maxExcerpt: Int) extends Ht
   def getAllHeaders = response.getAllHeaders
   def getStatusLine = response.getStatusLine
 
-  private val entity = new ResettableHttpEntity(response.getEntity, maxExcerpt)
+  private val rawEntity = response.getEntity
+  private val entity = if (rawEntity==null) rawEntity else new ResettableHttpEntity(rawEntity, maxExcerpt)
+  def hasEntity = entity != null
   override def getEntity = entity
 
   // TODO: Yuck -- How can we implement automatic delegation?!

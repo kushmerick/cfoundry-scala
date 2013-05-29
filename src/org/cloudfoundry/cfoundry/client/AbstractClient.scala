@@ -8,17 +8,18 @@ import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
 
-abstract class AbstractClient[TCRUD <: AbstractCRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
+abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
   extends ClientResource {
 
   //// client context
 
-  setClient(this)
+  setContext(this)
 
   setLogger(_logger)
   setInflector(new Inflector)
   setCrud(crudFactory(target, _logger))
   clearToken
+  setCache(new Cache(100))
 
   //// properties
 
@@ -26,9 +27,7 @@ abstract class AbstractClient[TCRUD <: AbstractCRUD](crudFactory: (String, Logge
 
   property("cfoundry_scala_version", default = Some(Version.version), readOnly = true)
 
-  private val CLOUDFOUNDRY_VERSION = "cloudfoundry_version"
-  property(CLOUDFOUNDRY_VERSION, typ = "int", readOnly = true)
-  setData(CLOUDFOUNDRY_VERSION, info("version").int, ingesting = true)
+  property("cloudfoundry_version", typ = "int", default = Some(info("version").int), readOnly = true)
 
   property("id", applicable = false)
   property("name", applicable = false)
@@ -45,7 +44,7 @@ abstract class AbstractClient[TCRUD <: AbstractCRUD](crudFactory: (String, Logge
     try {
       val childClassName = getInflector.singularize(childrenName)
       // the child class should be in Resource's package (but some aren't Resources)
-      if (getClass(R, getInflector.capitalize(childClassName)).getSuperclass == R) {
+      if (getSiblingClass(getInflector.capitalize(childClassName), ofClass = R).getSuperclass == R) {
         hasMany(childClassName) // yep, a side effect.  so kick me....
         return true
       }
@@ -80,7 +79,7 @@ abstract class AbstractClient[TCRUD <: AbstractCRUD](crudFactory: (String, Logge
   private val LOGIN_ENDPOINT = "authorization_endpoint"
   lazy private val loginClient: LoginClient[TCRUD] =
     new LoginClient[TCRUD](crudFactory, discoverEndpoint(LOGIN_ENDPOINT), logger)
-
+  
   //// just for debugging
 
   override protected def toStringDecoration = ""

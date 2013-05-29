@@ -4,7 +4,7 @@ import org.cloudfoundry.cfoundry.http._
 import org.cloudfoundry.cfoundry.util._
 import java.util.logging._
 
-class MockCRUD(_endpoint: String, _logger: Logger) extends AbstractCRUD(_endpoint, _logger) {
+class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logger) {
 
   val fixtures = MockCRUD.fixtures(endpoint)
 

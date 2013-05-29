@@ -3,6 +3,7 @@ package org.cloudfoundry.cfoundry.http
 import java.io._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
+import org.cloudfoundry.cfoundry.http.resettable.ResettableHttpResponse
 
 class Response(code: Option[Int] = None, _payload: Option[Payload] = None) {
 
@@ -26,20 +27,23 @@ class Response(code: Option[Int] = None, _payload: Option[Payload] = None) {
 
 object Response {
 
-  def apply(r: org.apache.http.HttpResponse) = create(r)
+  def apply(r: ResettableHttpResponse) = create(r)
 
-  private def create(r: org.apache.http.HttpResponse) = {
+  private def create(r: ResettableHttpResponse) = {
     val code = r.getStatusLine.getStatusCode
-    var istream: InputStream = null
-    try {
-      istream = r.getEntity.getContent
-      val payload = new Payload(JSON.deserialize(istream))
-      new Response(Some(code), Some(payload))
-    } catch {
-      case x: Exception => throw new InvalidResponse(code, x)
-    } finally {
-      if (istream != null) istream.close
+    var payload = Payload(null)
+    if (r.hasEntity) {
+      var istream: InputStream = null
+      try {
+        istream = r.getEntity.getContent
+        payload = new Payload(JSON.deserialize(istream))
+      } catch {
+        case x: Exception => throw new InvalidResponse(code, x)
+      } finally {
+        if (istream != null) istream.close
+      }
     }
+    new Response(Some(code), Some(payload))
   }
 
 }

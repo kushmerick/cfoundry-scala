@@ -22,8 +22,10 @@ class Payload(val obj: Any) {
 
   //// map
 
-  private type M = Map[String, Any]
+  private type M = scala.collection.Map[String,Any]
+
   lazy val isMap = obj.isInstanceOf[M]
+  
   private lazy val _map = asA[M]
 
   lazy val map = try {
@@ -44,7 +46,9 @@ class Payload(val obj: Any) {
   //// seq
 
   private type S = Seq[Any]
+
   lazy val isSeq = obj.isInstanceOf[S]
+
   private lazy val _seq = asA[S]
 
   lazy val seq = try {
@@ -66,31 +70,11 @@ class Payload(val obj: Any) {
    * [++//++] We might see a cast class exception, due to erasure; see
    * http://www.scala-lang.org/api/current/index.html#scala.Any@asInstanceOf[T0]:T0
    */
-
-  //// resource
-
-  lazy val isResource = obj.isInstanceOf[Resource]
-  lazy val resource = asA[Resource]
-
-  //// values
-
-  lazy val isDouble = obj.isInstanceOf[Double] || obj.isInstanceOf[Int]
-  lazy val double = try {
-    asA[Double]
-  } catch {
-    case x: Exception => try {
-      asA[Int] + 0d
-    } catch {
-      case y: Exception => unexpectedType(obj, new MultipleCauses(x, y))
-    }
-  }
-
-  lazy val isInt = isDouble
-  lazy val int = double.toInt
-
-  lazy val isTrueInt = isInt && double == int
+  
+  //// string
 
   lazy val isString = obj.isInstanceOf[String]
+
   lazy val string = {
     if (isString) {
       asA[String]
@@ -107,15 +91,31 @@ class Payload(val obj: Any) {
     }
   }
 
-  lazy val optional_string = try {
-    asA[Option[String]]
+  //// resource
+
+  lazy val isResource = obj.isInstanceOf[Resource]
+
+  lazy val resource = asA[Resource]
+
+  //// values
+
+  lazy val isDouble = obj.isInstanceOf[Double] || obj.isInstanceOf[Int]
+
+  lazy val double = try {
+    asA[Double]
   } catch {
     case x: Exception => try {
-      Option(string)
+      asA[Int] + 0d
     } catch {
       case y: Exception => unexpectedType(obj, new MultipleCauses(x, y))
     }
   }
+
+  lazy val isInt = isDouble
+
+  lazy val int = double.toInt
+
+  lazy val isTrueInt = isInt && double == int
 
   lazy val isBool = obj.isInstanceOf[Boolean]
 
@@ -130,15 +130,13 @@ class Payload(val obj: Any) {
 
   lazy val isNull = obj == null
 
-  ////
+  //// explicit casting
 
   private def asA[T] = try {
     obj.asInstanceOf[T]
   } catch {
     case x: Exception => unexpectedType(obj, x)
   }
-
-  //// explicit casting to a particular type
 
   private lazy val mirror = runtimeMirror(getClass.getClassLoader).reflect(this)
 
@@ -160,6 +158,7 @@ class Payload(val obj: Any) {
   override def toString = pretty
 
   private lazy val pretty: String = obj match {
+    case null => "null"
     case m: M => map.map({ case (k, v) => s"${k}: ${v.toString}" }).mkString("{", ", ", "}")
     case a: S => seq.map(x => x.toString).mkString("[", ", ", "]")
     case s: String => "\"" + s + "\""

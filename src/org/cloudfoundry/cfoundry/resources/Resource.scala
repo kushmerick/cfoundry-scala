@@ -10,7 +10,7 @@ import scala.language.dynamics
 import scala.beans._
 import java.util.logging._
 
-class Resource(@BeanProperty var client: ClientContext)
+class Resource(@BeanProperty var context: ClientContext)
   extends Dynamic with ClassNameUtilities {
 
   //// constants
@@ -22,10 +22,15 @@ class Resource(@BeanProperty var client: ClientContext)
 
   //// client context
 
-  private def crud = client.getCrud
-  private def inflector = client.getInflector
-  private def logger = client.getLogger
-  private def token = client.getToken
+  private def crud = context.getCrud
+  private def inflector = context.getInflector
+  private def logger = context.getLogger
+  private def token = context.getToken
+  private def cache = context.getCache
+  
+  //// quick-and-dirty type checking
+  
+  def isA(resourceClassBriefName: String) = getBriefClassName == resourceClassBriefName 
 
   //// state
 
@@ -33,14 +38,14 @@ class Resource(@BeanProperty var client: ClientContext)
   private val data: Map[String, Payload] = Map[String, Payload]()
 
   private val children = Set[String]()
-  private val parents = Set[String]()
+  private val parents = Map[String, Class[_]]()
 
   private var isDirty: Boolean = false
 
   //// most resources have these properties, though subclasses might
   //// declare the property again, for example to override 'source'
 
-  property(id, source = "guid", default = Some(NO_ID))
+  property(id, source = "guid", default = Some(NO_ID), readOnly = true)
   property("name")
   property("description")
   property(url, readOnly = true)
@@ -48,9 +53,17 @@ class Resource(@BeanProperty var client: ClientContext)
   //// properties (TODO: should be 'static', but can't just move them to
   //// a companion object due to subclassing.)
 
-  protected def property(name: String, typ: String = "string", source: String = null, filter: Filter = null, default: Option[Any] = None, applicable: Boolean = true, readOnly: Boolean = false) = {
+  protected def property(
+      name: String,
+      typ: String = "string",
+      source: String = null,
+      filter: Filter = null,
+      default: Option[Any] = None,
+      applicable: Boolean = true,
+      readOnly: Boolean = false,
+      parental: Boolean = false) = {
     if (applicable)
-      properties += name -> new Property(name, typ, source, filter, default, readOnly)
+      properties += name -> new Property(name, typ, source, filter, default, readOnly, parental)
     else
       // TODO: Flesh out the Resource hierarchy to avoid this ugliness
       properties -= name
@@ -69,8 +82,8 @@ class Resource(@BeanProperty var client: ClientContext)
     val childrenName = inflector.pluralize(childName)
     children += childrenName
     val children_name = inflector.camelToUnderline(childrenName)
-    val absolutePath = if (isInstanceOf[ClientContext]) Some(childrenAbsolutePath(children_name)) else None
-    property(childrenPathPropertyName(childrenName), source = childrenPathSource(children_name), default = absolutePath, readOnly = true)
+    val default = if (isInstanceOf[ClientContext]) Some(childrenAbsolutePath(children_name)) else None
+    property(childrenPathPropertyName(childrenName), source = childrenPathSource(children_name), default = default, readOnly = true)
   }
 
   private def childrenPathPropertyName(childrenName: String) = {
@@ -99,13 +112,14 @@ class Resource(@BeanProperty var client: ClientContext)
     children.contains(childrenName)
   }
 
-  //// parents; ditto.  (TODO: Simplify resouorce definitions by automatically
+  //// parents; ditto.  (TODO: Simplify resource definitions by automatically
   //// generate hasA from hasMany [or the other way around].)
 
   protected def hasA(parentName: String) = {
-    parents += parentName
-    property(parentName, typ = "resource")
-    property(parentGuidPropertyName(parentName))
+    val parentClass = getSiblingClass(inflector.capitalize(parentName)) 
+    parents += parentName -> parentClass
+    property(parentName, typ = "resource", parental = true)
+    property(parentGuidPropertyName(parentName), parental = true)
   }
 
   protected def hasParent(parentName: String) = {
@@ -133,6 +147,7 @@ class Resource(@BeanProperty var client: ClientContext)
 
   def fromPayload(payload: Payload): Resource = {
     fromPayload(payload, Seq("metadata", "entity"))
+    this
   }
 
   private def fromPayload(payload: Payload, keys: Seq[String]) = {
@@ -140,7 +155,6 @@ class Resource(@BeanProperty var client: ClientContext)
       ingest(payload(key))
     }
     isDirty = false
-    this
   }
 
   private def ingest(raw: Payload) {
@@ -167,7 +181,7 @@ class Resource(@BeanProperty var client: ClientContext)
         logger.finest(s"Ignoring key '${key}' for resource ${getBriefClassName}")
       } else {
         logger.finest(s"Setting property '${propertyName}' to '${value}' from '${key}' for resource ${getBriefClassName}")
-        setData(propertyName, value, ingesting = true)
+        setData(propertyName, value, sudo = true)
       }
     }
   }
@@ -178,28 +192,28 @@ class Resource(@BeanProperty var client: ClientContext)
   private def hasData(propertyName: String) = data.contains(propertyName)
 
   protected def setData(property: Property, value: Payload): Unit = setData(property, value, false)
-  protected def setData(property: Property, value: Payload, ingesting: Boolean): Unit = {
-    if (!ingesting && property.readOnly) throw new ReadOnly(property, value, this)
+  protected def setData(property: Property, value: Payload, sudo: Boolean): Unit = {
+    if (!sudo && property.readOnly) throw new ReadOnly(property, value, this)
     data.put(property.name, value)
   }
 
   protected def setData(property: Property, value: Any): Unit = setData(property, value, false)
-  protected def setData(property: Property, value: Any, ingesting: Boolean): Unit = {
-    setData(property, Payload(value), ingesting)
+  protected def setData(property: Property, value: Any, sudo: Boolean): Unit = {
+    setData(property, Payload(value), sudo)
   }
 
   protected def setData(propertyName: String, value: Payload): Unit = setData(propertyName, value, false)
-  protected def setData(propertyName: String, value: Payload, ingesting: Boolean): Unit = {
+  protected def setData(propertyName: String, value: Payload, sudo: Boolean): Unit = {
     if (hasProperty(propertyName)) {
-      setData(properties(propertyName), value, ingesting)
+      setData(properties(propertyName), value, sudo)
     } else {
       throw new InvalidProperty(propertyName, this)
     }
   }
 
   protected def setData(propertyName: String, value: Any): Unit = setData(propertyName, value, false)
-  protected def setData(propertyName: String, value: Any, ingesting: Boolean): Unit = {
-    setData(propertyName, Payload(value), ingesting)
+  def setData(propertyName: String, value: Any, sudo: Boolean): Unit = {
+    setData(propertyName, Payload(value), sudo)
   }
 
   private def clearData(propertyName: String) = data.remove(propertyName)
@@ -238,46 +252,86 @@ class Resource(@BeanProperty var client: ClientContext)
       // service.servicePlan()
       // etc
       selectDynamic(noun)
+    } else if (args.length == 1 && args(0).isInstanceOf[Int]) {
+      // client.services(3) -- kinda bizarre but we'll interpret as "the 4th service"
+      MagicResource(selectDynamic(noun).resources(args(0).asInstanceOf[Int]))
     } else {
-      // why do we end up here not magic?
       throw new UnexpectedArguments(noun, args)
     }
   }
 
   def selectDynamic(noun: String) = {
     if (hasProperty(noun)) {
-      // service.version
-      logger.fine(s"Selecting property '${noun}' of resource ${this}")
-      MagicProp(getData(noun))
-    } else {
-      if (hasChildren(inflector.pluralize(noun))) {
-        val factory = factoryFor(noun)
-        if (inflector.isSingular(noun)) {
-          // service.servicePlan
-          logger.fine(s"Creating a new '${noun}' child of resource ${this}")
-          val child = factory.create
-          if (!isInstanceOf[ClientResource]) {
-            // set servicePlan.service and servicePlan.serviceGuid
-            val parentName = inflector.lowerize(getBriefClassName)
-            child.setData(parentName, this)
-            child.setData(child.parentGuidPropertyName(parentName), getId)
+      if (hasParent(noun)) {
+        // servicePlan.service
+        val parentName = noun
+        val pgpn = parentGuidPropertyName(parentName)
+        logger.fine(s"Selecting parent '${parentName}' of resource ${this}")
+        if (!hasData(parentName)) {
+          if (hasData(pgpn)) {
+            // lazily load the resource
+            val parent = factoryFor(noun).create
+            parent.refresh(getData[String](pgpn))
+            attachParent(parentName, parent, this)
+          } else {
+            throw new MultipleCauses(
+              new MissingRequiredProperty(this, properties(parentName)),
+              new MissingRequiredProperty(this, properties(pgpn)))
           }
-          MagicResource(child)
-        } else {
-          // service.servicePlans
-          // TODO: Link children & parent
-          logger.fine(s"Enumerating '${noun}' children of resource ${this}")
-          val path = getData[String](childrenPathPropertyName(noun))
-          MagicResources(enumerate(factory, path))
         }
+        MagicResource(getData(noun))
       } else {
-        throw new InvalidProperty(noun, this)
+        // servicePlan.description
+        logger.fine(s"Selecting property '${noun}' of resource ${this}")
+        MagicProp(getData(noun))
       }
+    } else if (hasChildren(inflector.pluralize(noun))) {
+      val factory = factoryFor(noun)
+      if (inflector.isSingular(noun)) {
+        // servicePlan.serviceInstance
+        logger.fine(s"Creating new '${noun}' child of resource ${this}")
+        val child = factory.create
+        if (!isInstanceOf[ClientResource]) {
+          val parentPropertyName = inflector.lowerize(getBriefClassName)
+          attachParent(parentPropertyName, this, child)
+        }
+        MagicResource(child)
+      } else {
+        // servicePlan.serviceInstances
+        logger.fine(s"Enumerating '${noun}' children of resource ${this}")
+        val path = getData[String](childrenPathPropertyName(noun))
+        MagicResources(enumerate(factory, path))
+      }
+    } else {
+      throw new InvalidProperty(noun, this)
     }
   }
 
   def updateDynamic(noun: String)(value: Any) = {
-    // TODO
+    if (hasParent(noun)) {
+      var parent: Resource = null
+      if (value.isInstanceOf[Resource]) {
+        parent = value.asInstanceOf[Resource]
+      } else if (value.isInstanceOf[MagicResource]) {
+        parent = value.asInstanceOf[Magic].resource
+      }
+      if (parent == null) {
+        throw new InvalidParent(this, noun, value, "not a resource")
+      }
+      if (parent.isLocalOnly) {
+        // TODO: Automatically save all resources in some appropriate order?
+        throw new InvalidParent(this, noun, parent, "must be saved first")
+      }
+      if (!parent.isA(inflector.capitalize(noun))) {
+        throw new InvalidParent(this, noun, value, s"not a '${noun}'")
+      }
+      setData(noun, parent) // <== here's why we check 'hasParent' befire 'hasProperty' 
+      setData(parentGuidPropertyName(noun), parent.getId)
+    } else if (hasProperty(noun)) {
+      setData(noun, value)
+    } else {
+      throw new InvalidProperty(noun, this)
+    }
     isDirty = true
   }
 
@@ -288,12 +342,16 @@ class Resource(@BeanProperty var client: ClientContext)
     selectDynamic(noun)
   }
 
+  def s(noun: String, value: Any): Unit = {
+    updateDynamic(noun)(value)
+  }
+
   // TODO
 
   //// child creation & enumeration
 
   private def factoryFor(noun: String) = {
-    new Factory(noun, client)
+    new Factory(noun, context)
   }
 
   private def enumerate(factory: Factory, _path: String): Seq[Resource] = {
@@ -304,38 +362,83 @@ class Resource(@BeanProperty var client: ClientContext)
       resources ++= payload("resources").seq.map(resourcePayload => factory.create(resourcePayload))
       path = payload("next_url").string
     } while (path != null)
-    resources.result
+    val resources2 = resources.result
+    for (resource <- resources2) {
+      cache.touch(resource)
+    }
+    resources2
   }
 
   //// save = create if resource does not exist on the server, or update if it does
 
   def save = {
     if (isLocalOnly) {
-      Crud
+      create
     } else {
-      if (isDirty) crUd
+      if (isDirty) update
     }
+    cache.touch(this)
   }
 
   def isLocalOnly = !hasId
 
   //// destroy
 
-  def destroy = if (hasId) cruD
+  def destroy = {
+    if (hasId) {
+      delete
+      cache.eject(this)
+      clearId
+    }
+  }
 
   //// refresh
 
-  def refresh = if (hasId) cRud else throw new Unrefreshable(this)
+  def refresh(newId: String = null) = {
+    if (newId != null) {
+      if (hasId) {
+        logger.warning(s"Changing id of ${this} from ${getId} to ${newId}")
+        cache.eject(this)
+      }
+      setData(id, newId, sudo = true)
+    }
+    if (hasId) {
+      read
+      cache.touch(this)
+    } else {
+      throw new Unrefreshable(this)
+    }
+  }
 
   //// property helpers
 
-  private def getUrl = getData[String](url)
+  private def getUrl = {
+    if (hasData(url)) {
+      getData[String](url)
+    } else if (hasId) {
+      if (data.size == 1) {
+        // if we just have the id, then we'll assume we're lazily
+        // fetching a parent -- ie, this is not a problem
+        logger.info(s"Creating URL for ${this} ")
+      } else {
+        logger.warning(s"Generating missing URLfor ${this}")
+      }
+      s"${absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))}/${getId}"
+    } else {
+      getData[String](url) // force exception
+    }
+  }
 
-  private def getId = getData[String](id)
+  def getId = getData[String](id)
   private def hasId = hasData(id)
   private def clearId = clearData(id)
 
-  //// absolute paths such as /v2/service_instances
+  def attachParent(parentPropertyName: String, parent: Resource, child: Resource) = {
+    child.setData(parentPropertyName, parent)
+    child.setData(child.parentGuidPropertyName(parentPropertyName), parent.getId)
+  }
+
+  /// absolute paths such as /v2/service_instances
 
   private def absolutePath(): String = {
     absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))
@@ -344,47 +447,49 @@ class Resource(@BeanProperty var client: ClientContext)
   private def absolutePath(plural_class_name: String = null) = {
     s"/v2/${plural_class_name}"
   }
-
+  
   ///// CRUD operations
 
-  private def Crud = {
-    val payload = Map[String, Any]()
+  private def create = {
+    val content = Map[String, Any]()
     for ((propertyName, property) <- properties) {
-      if (propertyName != id && !isChildrenPathPropertyName(propertyName)) {
-        payload.put(property.getTrueSource, getData(property))
+      if (property.readOnly || property.parental) {
+        logger.finest(s"Ignoring property '${propertyName}' while creating ${this}")
+      } else {
+        content.put(property.getTrueSource, getData(property))
       }
     }
-    for (parentName <- parents) {
-      val parent = if (hasData(parentName)) getData[Resource](parentName) else null
+    for ((parentName, parentClass) <- parents) {
       val pgpn = parentGuidPropertyName(parentName)
       var parentGuid = if (hasData(pgpn)) getData[String](pgpn) else null
+      val parent = if (hasData(parentName)) getData[Resource](parentName) else null
       if (parent == null && parentGuid == null) {
         throw new NotSaveable(this, parentName)
-      } else {
+     } else {
         if (parent != null && parentGuid != null && parent.getId != parentGuid) {
-          throw new NotSaveable(this, s"Inconsistent GUID for parent '${parentName}': '${parentGuid}' and '${parent.getId}'")
+          throw new NotSaveable(this, s"Inconsistent parent '${parentName}': '${parentGuid}' and '${parent.getId}'")
         }
         if (parentGuid == null) parentGuid = parent.getId
-        payload.put(parent_guid_key(parentName), parentGuid)
+        content.put(parent_guid_key(parentName), parentGuid)
       }
     }
-    performAndReload(() => crud.Crud(absolutePath)(options)(Some(Payload(payload))))
+    val payload = Payload(JSON.serialize(Payload(content)))
+    performAndReload(() => crud.Crud(absolutePath)(options)(Some(payload)))
   }
 
-  private def cRud = {
+  private def read = {
     performAndReload(() => crud.cRud(getUrl)(options))
   }
 
-  private def crUd = {
+  private def update = {
     val metadata = Map(id -> getId)
     val entity = null // TODO
     val payload = Map("metadata" -> metadata, "entity" -> entity)
     performAndReload(() => crud.crUd(getUrl)(options)(Some(Payload(payload))))
   }
 
-  private def cruD = {
+  private def delete = {
     perform(() => crud.cruD(getUrl)(options))
-    clearId
   }
 
   private def options = {
@@ -418,9 +523,9 @@ class Resource(@BeanProperty var client: ClientContext)
       Payload(
         properties
           .values
-          .filter(property => property.hasDefault || hasData(property))
+          .filter(property => (property.hasDefault || hasData(property)) && !isVerbose(property))
           .map(property => property.name -> getData(property))
-          .toMap)
+        .toMap)
       .toString
     s += '>'
     s.result
@@ -431,6 +536,14 @@ class Resource(@BeanProperty var client: ClientContext)
     if (isDirty) s ++= "D"
     if (isLocalOnly) s ++= "L"
     s.result
+  }
+  
+  private def isVerbose(property: Property) = {
+    property.parental &&
+    ({
+       val p = parentGuidPropertyName(property.name)
+       hasProperty(p) && hasData(p)
+    })
   }
 
 }

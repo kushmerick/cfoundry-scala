@@ -10,8 +10,8 @@ trait ClassNameUtilities {
     c.getName.substring(c.getPackage.getName.length + 1)
   }
 
-  def getClass(siblingClass: Class[_], className: String) = {
-    Class.forName(siblingClass.getPackage.getName + '.' + className)
+  def getSiblingClass(siblingClassName: String, ofClass: Class[_] = getClass): Class[_] = {
+ 	Class.forName(ofClass.getPackage.getName + '.' + siblingClassName)
   }
 
 }

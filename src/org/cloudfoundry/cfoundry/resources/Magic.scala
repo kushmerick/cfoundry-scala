@@ -14,7 +14,9 @@ abstract class Magic extends Dynamic {
     case MagicResources(s) => s
     case _ => throw new PropertyResourceConfusion("resources", this)
   }
-
+  
+  def apply(index: Int) = resources(index)
+  
   def prop = this match {
     case MagicProp(v) => v
     case _ => throw new PropertyResourceConfusion("prop", this)
@@ -51,9 +53,9 @@ abstract class Magic extends Dynamic {
 
   override def toString = {
     "<Magic: " + (this match {
-      case MagicResource(r) => r
-      case MagicResources(s) => s
-      case MagicProp(v) => v
+      case MagicResource(r) => s"resource: ${r}"
+      case MagicResources(s) => s"resources: ${s}"
+      case MagicProp(v) => s"value: ${v}"
     }) + ">"
   }
 

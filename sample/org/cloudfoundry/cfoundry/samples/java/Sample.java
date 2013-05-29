@@ -7,16 +7,21 @@ import java.util.logging.*;
 class Sample {
 
 	public static void main(String[] args) {
+		
 		String target = args[0];
 		String username = args[1];
 		String password = args[2];
+		
 		Client client = new Client(target, logger());
+		
 		client.login(username, password);
+
 		for (Resource org : client.o("organizations").asResources()) {
 			for (Resource space : org.o("spaces").asResources()) {
 				System.out.println("Org " + org + " has space " + space);
 			}
 		}
+
 		for (Resource service : client.o("services").asResources()) {
 			for (Resource servicePlan : service.o("servicePlans").asResources()) {
 				for (Resource serviceInstance : servicePlan.o(
@@ -28,6 +33,17 @@ class Sample {
 				}
 			}
 		}
+		
+		Resource service = client.o("services").asResources().iterator().next();
+		Resource servicePlan = service.o("servicePlans").asResources().iterator().next();
+        Resource space = client.o("spaces").asResources().iterator().next();
+        Resource serviceInstance = servicePlan.o("serviceInstance").resource();
+	    serviceInstance.s("name", "foobar");
+	    serviceInstance.s("space", space);
+	    serviceInstance.s("servicePlan", servicePlan);
+	    serviceInstance.save();
+	    serviceInstance.destroy();
+
 		client.logout();
 	}
 
