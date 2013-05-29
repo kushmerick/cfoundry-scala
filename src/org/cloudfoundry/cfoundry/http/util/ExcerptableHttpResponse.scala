@@ -1,14 +1,14 @@
-package org.cloudfoundry.cfoundry.http.resettable
+package org.cloudfoundry.cfoundry.http.util
 
 import org.apache.http._
 
-class ResettableHttpResponse(response: HttpResponse, maxExcerpt: Int) extends HttpResponse {
+class ExcerptableHttpResponse(response: HttpResponse, maxExcerpt: Int) extends HttpResponse {
 
   def getAllHeaders = response.getAllHeaders
   def getStatusLine = response.getStatusLine
 
   private val rawEntity = response.getEntity
-  private val entity = if (rawEntity==null) rawEntity else new ResettableHttpEntity(rawEntity, maxExcerpt)
+  private val entity = if (rawEntity==null) rawEntity else new RepeatableHttpEntity(rawEntity, maxExcerpt)
   def hasEntity = entity != null
   override def getEntity = entity
 

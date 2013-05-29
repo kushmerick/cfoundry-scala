@@ -1,10 +1,10 @@
-package org.cloudfoundry.cfoundry.http.resettable
+package org.cloudfoundry.cfoundry.http.util
 
 import org.apache.http._
 import org.apache.http.entity._
 import java.io._
 
-class ResettableHttpEntity(entity: HttpEntity, maxExcerpt: Int) extends HttpEntityWrapper(entity) {
+class RepeatableHttpEntity(entity: HttpEntity, maxExcerpt: Int) extends HttpEntityWrapper(entity) {
 
   private val origIsRepeatable = entity.isRepeatable
   private val origContent = entity.getContent

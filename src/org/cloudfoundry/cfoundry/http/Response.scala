@@ -3,7 +3,7 @@ package org.cloudfoundry.cfoundry.http
 import java.io._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
-import org.cloudfoundry.cfoundry.http.resettable.ResettableHttpResponse
+import org.cloudfoundry.cfoundry.http.util._
 
 class Response(code: Option[Int] = None, _payload: Option[Payload] = None) {
 
@@ -27,9 +27,9 @@ class Response(code: Option[Int] = None, _payload: Option[Payload] = None) {
 
 object Response {
 
-  def apply(r: ResettableHttpResponse) = create(r)
+  def apply(r: ExcerptableHttpResponse) = create(r)
 
-  private def create(r: ResettableHttpResponse) = {
+  private def create(r: ExcerptableHttpResponse) = {
     val code = r.getStatusLine.getStatusCode
     var payload = Payload(null)
     if (r.hasEntity) {

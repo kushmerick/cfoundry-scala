@@ -5,7 +5,7 @@ import java.net._
 import java.util.logging._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
-import org.cloudfoundry.cfoundry.http.resettable._
+import org.cloudfoundry.cfoundry.http.util._
 import org.apache.http._
 import org.apache.http.client._
 import org.apache.http.impl.client._
@@ -43,7 +43,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     } catch {
       case x: Exception => throw new HTTPFailure(x)
     }
-    val response = new ResettableHttpResponse(rawResponse, excerptLength)
+    val response = new ExcerptableHttpResponse(rawResponse, excerptLength)
     trace(response)
     Response(response)
   }
@@ -51,7 +51,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
   private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, options: Option[Pairs], payload: Option[Payload]) = {
     val request = makeRequest(classs, path, options, payload)
     trace(request)
-    val response = new ResettableHttpResponse(httpClient.execute(request), excerptLength)
+    val response = new ExcerptableHttpResponse(httpClient.execute(request), excerptLength)
     trace(response)
     Response(response)
   }
@@ -107,7 +107,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     trace(s">> ${message}")
   }
 
-  private def trace(response: ResettableHttpResponse): Unit = {
+  private def trace(response: ExcerptableHttpResponse): Unit = {
     val payload = if (response.hasEntity) s", payload=${Entity.excerpt(response,maxExcerpt)}" else ""
     trace(s"<< code=${response.getStatusLine.getStatusCode}, headers=${headers(response)}${payload}")
   }
