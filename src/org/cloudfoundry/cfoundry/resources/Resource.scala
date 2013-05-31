@@ -42,6 +42,11 @@ class Resource(@BeanProperty var context: ClientContext)
 
   private var isDirty: Boolean = false
 
+  // just for static_bindings/Generate 
+  def getProperties = properties
+  def getChildren = children
+  def getParents = parents
+
   //// most resources have these properties, though subclasses might
   //// declare the property again, for example to override 'source'
 
@@ -108,7 +113,7 @@ class Resource(@BeanProperty var context: ClientContext)
     absolutePath(children_name)
   }
 
-  protected def hasChildren(childrenName: String) = {
+  def hasChildren(childrenName: String) = {
     children.contains(childrenName)
   }
 
@@ -122,7 +127,7 @@ class Resource(@BeanProperty var context: ClientContext)
     property(parentGuidPropertyName(parentName), parental = true)
   }
 
-  protected def hasParent(parentName: String) = {
+  def hasParent(parentName: String) = {
     parents.contains(parentName)
   }
 
@@ -325,8 +330,12 @@ class Resource(@BeanProperty var context: ClientContext)
       if (!parent.isA(inflector.capitalize(noun))) {
         throw new InvalidParent(this, noun, value, s"not a '${noun}'")
       }
-      setData(noun, parent) // <== here's why we check 'hasParent' befire 'hasProperty' 
-      setData(parentGuidPropertyName(noun), parent.getId)
+      setData(noun, parent)
+      if (parent.hasId) {
+        setData(parentGuidPropertyName(noun), parent.getId) // <== here's why we check 'hasParent' before 'hasProperty'
+      } else {
+        clearData(parentGuidPropertyName(noun))
+      }
     } else if (hasProperty(noun)) {
       setData(noun, value)
     } else {
@@ -363,9 +372,7 @@ class Resource(@BeanProperty var context: ClientContext)
       path = payload("next_url").string
     } while (path != null)
     val resources2 = resources.result
-    for (resource <- resources2) {
-      cache.touch(resource)
-    }
+    resources2.foreach(resource => cache.touch(resource))
     resources2
   }
 

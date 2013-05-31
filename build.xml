@@ -1,0 +1,38 @@
+<!-- this just builds the static bindings -->
+
+<project>
+
+    <property name="scala_lib_dir" value="${eclipse.home}\configuration\org.eclipse.osgi\bundles\959\1\.cp\lib"/>
+
+	<target name="clean">
+		<delete dir="static_bindings" />
+	</target>
+
+	<target name="static_bindings">
+		<taskdef resource="net/sf/antcontrib/antlib.xml">
+			<classpath>
+				<pathelement location="3p/lib/ant-contrib/ant-contrib-1.0b3.jar" />
+			</classpath>
+		</taskdef>
+		<mkdir dir="static_bindings/src" />
+		<for param="infile">
+			<fileset dir="src/org/cloudfoundry/cfoundry/resources">
+				<include name="*.scala" />
+			</fileset>
+			<sequential>
+				<java classname="org.cloudfoundry.cfoundry.static_bindings.Generate">
+					<arg value="@{infile}" />
+					<arg value="static_bindings/src" />
+					<classpath>
+						<pathelement location="bin" />
+						<pathelement location="${scala_lib_dir}/scala-library.jar" />
+						<pathelement path="${java.class.path}" />
+					</classpath>
+				</java>
+			</sequential>
+		</for>
+		<mkdir dir="static_bindings/classes" />
+		<javac srcdir="static_bindings/src" destdir="static_bindings/classes" includeantruntime="false"/>
+	</target>
+
+</project>
