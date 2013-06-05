@@ -24,12 +24,10 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// properties
 
   property("target", default = Some(target), readOnly = true)
-
   property("cfoundry_scala_version", default = Some(Version.version), readOnly = true)
+  property("cloudfoundry_version", typ = "int", default = Some(cloudfoundryVersion), readOnly = true)
 
-  property("cloudfoundry_version", typ = "int", default = Some(info("version").int), readOnly = true)
-
-  property("id", applicable = false)
+  property("id", applicable = false) // TODO: Resource assumes everything has an id?!
   property("name", applicable = false)
   property("description", applicable = false)
   property("url", applicable = false)
@@ -38,17 +36,20 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// of time, we do so on demand as they are requested.
 
   private val R = classOf[Resource]
+  private lazy val CR = classOf[ClientResource]
 
   override def hasChildren(childrenName: String): Boolean = {
     if (super.hasChildren(childrenName)) return true
     try {
       val childClassName = getInflector.singularize(childrenName)
-      // the child class should be in Resource's package (but some aren't Resources)
-      if (getSiblingClass(getInflector.capitalize(childClassName), ofClass = R).getSuperclass == R) {
+      val childClass = getSiblingClass(getInflector.capitalize(childClassName), ofClass = R)
+      // the child class should be in Resource's package (but some aren't Resources,
+      // and ClientResource is a special case)
+      if (childClass.getSuperclass == R && childClass != CR) {
         hasMany(childClassName) // yep, a side effect.  so kick me....
         return true
       }
-    } catch { case x: Exception => }
+    } catch { case x: Throwable => }
     return false
   }
 
@@ -68,7 +69,9 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   //// info
 
-  private lazy val info = perform(() => getCrud.cRud("/info")())
+  protected lazy val info = perform(() => getCrud.cRud("/info")())
+
+  protected lazy val cloudfoundryVersion = info("version").int
 
   //// auth clients
 
@@ -79,7 +82,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   private val LOGIN_ENDPOINT = "authorization_endpoint"
   lazy private val loginClient: LoginClient[TCRUD] =
     new LoginClient[TCRUD](crudFactory, discoverEndpoint(LOGIN_ENDPOINT), logger)
-  
+
   //// just for debugging
 
   override protected def toStringDecoration = ""

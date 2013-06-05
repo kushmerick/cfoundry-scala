@@ -30,11 +30,11 @@ trait ClientContext {
 
   @BeanProperty
   protected var crud: CRUD = null
-  
+
   //// cache
-    
+
   @BeanProperty
-  protected var cache: Cache = null  
+  protected var cache: Cache = null
 
   //// logger
 

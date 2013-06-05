@@ -108,7 +108,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
   }
 
   private def trace(response: ExcerptableHttpResponse): Unit = {
-    val payload = if (response.hasEntity) s", payload=${Entity.excerpt(response,maxExcerpt)}" else ""
+    val payload = if (response.hasEntity) s", payload=${Entity.excerpt(response, maxExcerpt)}" else ""
     trace(s"<< code=${response.getStatusLine.getStatusCode}, headers=${headers(response)}${payload}")
   }
 

@@ -11,7 +11,7 @@ class PayloadSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     val payload = Payload("x")
     payload.isString should equal(true)
     payload.string should equal("x")
-    payload.toString should equal ("\"x\"")
+    payload.toString should equal("\"x\"")
   }
 
   it should "support int" in {
@@ -19,14 +19,14 @@ class PayloadSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     payload.isInt should equal(true)
     payload.isTrueInt should equal(true)
     payload.int should equal(1)
-    payload.toString should equal ("1")
+    payload.toString should equal("1")
   }
-  
+
   it should "support boolean" in {
     val payload = Payload(true)
     payload.isBool should equal(true)
     payload.bool should equal(true)
-    payload.toString should equal ("true")
+    payload.toString should equal("true")
   }
 
   it should "support double" in {
@@ -35,13 +35,13 @@ class PayloadSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     payload.double should equal(0.5)
     payload.int should equal(0)
     payload.isTrueInt should equal(false)
-    payload.toString should equal ("0.5")
+    payload.toString should equal("0.5")
   }
 
   it should "support null" in {
     val payload = Payload(null)
     payload.isNull should equal(true)
-    payload.toString should equal ("null")
+    payload.toString should equal("null")
   }
 
   it should "support map" in {
@@ -63,7 +63,7 @@ class PayloadSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     iterator.next.int should equal(1)
     iterator.next.int should equal(2)
   }
-  
+
   class MockResource extends Resource(null)
 
   it should "support resource" in {
@@ -72,7 +72,7 @@ class PayloadSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     payload.isResource should equal(true)
     payload.resource should equal(resource)
   }
-  
+
   it should "support as" in {
     // we could test "as" for all types, but it isn't necessary because "a" uses 
     // reflection -- if 'as' works for 'int', it will work for everything.   

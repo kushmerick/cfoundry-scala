@@ -10,14 +10,14 @@ object JSON {
     serialize(payload, json)
     json.result
   }
-  
+
   private def serialize(payload: Payload, json: StringBuilder): Unit = {
     if (payload.isNull) {
       json ++= "null"
     } else if (payload.isMap) {
       json ++= "{"
       var first = true
-      for ((key,value) <- payload.map) {
+      for ((key, value) <- payload.map) {
         if (first) first = false else json ++= ", "
         json ++= "\"" + qescape(key) + "\": "
         serialize(value, json)
@@ -37,11 +37,11 @@ object JSON {
       json ++= payload.obj.toString
     }
   }
-    
+
   private def qescape(s: String) = {
     "\"".r.replaceAllIn(s, "\\\"")
   }
-    
+
   // TODO: Why did I pick Butter42?
   def deserialize(json: InputStream) = try {
     butter4s.json.Parser.parse(new InputStreamReader(json))

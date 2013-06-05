@@ -8,7 +8,7 @@ class ExcerptableHttpResponse(response: HttpResponse, maxExcerpt: Int) extends H
   def getStatusLine = response.getStatusLine
 
   private val rawEntity = response.getEntity
-  private val entity = if (rawEntity==null) rawEntity else new RepeatableHttpEntity(rawEntity, maxExcerpt)
+  private val entity = if (rawEntity == null) rawEntity else new RepeatableHttpEntity(rawEntity, maxExcerpt)
   def hasEntity = entity != null
   override def getEntity = entity
 

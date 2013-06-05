@@ -11,7 +11,7 @@ trait ClassNameUtilities {
   }
 
   def getSiblingClass(siblingClassName: String, ofClass: Class[_] = getClass): Class[_] = {
- 	Class.forName(ofClass.getPackage.getName + '.' + siblingClassName)
+    Class.forName(ofClass.getPackage.getName + '.' + siblingClassName)
   }
 
 }

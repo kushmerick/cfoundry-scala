@@ -21,8 +21,8 @@ https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry
 
     Client client = new Client(target);
     client.login(username, password);
-    for (Resource service: client.o("services").asResources()) {
-      for (Resource servicePlan : service.o("servicePlans").asResources()) {
+    for (Service service : client.getServices()) {
+	  for (ServicePlan servicePlan : service.getServicePlans()) {
         ...
       }
     }

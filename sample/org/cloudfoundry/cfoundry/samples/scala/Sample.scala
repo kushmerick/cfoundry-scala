@@ -17,10 +17,12 @@ object Sample extends scala.App {
       Console.println(s"Org ${org} has space ${space}")
     }
   }
-  
-  for (service <- client.services;
-       servicePlan <- service.servicePlans;
-       serviceInstance <- servicePlan.serviceInstances) {
+
+  for (
+    service <- client.services;
+    servicePlan <- service.servicePlans;
+    serviceInstance <- servicePlan.serviceInstances
+  ) {
     Console.println(s"Service ${service} has plan ${servicePlan} with instance ${serviceInstance}")
   }
 
@@ -32,7 +34,6 @@ object Sample extends scala.App {
   serviceInstance.space = space
   serviceInstance.servicePlan = servicePlan
   serviceInstance.save
-
   serviceInstance.destroy
 
   client.logout

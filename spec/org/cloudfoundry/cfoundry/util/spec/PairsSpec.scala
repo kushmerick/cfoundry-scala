@@ -17,5 +17,5 @@ class PairsSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     iterator.next should equal("c" -> "&")
 
   }
-  
+
 }

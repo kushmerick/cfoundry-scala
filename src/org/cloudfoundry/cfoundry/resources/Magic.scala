@@ -5,21 +5,23 @@ import scala.language.dynamics
 
 abstract class Magic extends Dynamic {
 
+  import Magic._
+
   def resource = this match {
     case MagicResource(r) => r
-    case _ => throw new PropertyResourceConfusion("resource", this)
+    case _ => throw new PropertyResourceConfusion(RESOURCE, this)
   }
 
   def resources = this match {
     case MagicResources(s) => s
-    case _ => throw new PropertyResourceConfusion("resources", this)
+    case _ => throw new PropertyResourceConfusion(RESOURCES, this)
   }
-  
+
   def apply(index: Int) = resources(index)
-  
+
   def prop = this match {
     case MagicProp(v) => v
-    case _ => throw new PropertyResourceConfusion("prop", this)
+    case _ => throw new PropertyResourceConfusion(PROP, this)
   }
 
   def isNull = prop == null
@@ -41,14 +43,6 @@ abstract class Magic extends Dynamic {
   def applyDynamic(noun: String)(args: Any*) = resource.doApplyDynamic(noun, args)
   def updateDynamic(noun: String)(value: Any) = resource.updateDynamic(noun)(value)
 
-  // sugar for Java
-
-  def asResources: java.lang.Iterable[Resource] = {
-    // TODO: This jump into Java is to prevent type parameters from
-    // getting lost.  Is that really necessary?!
-    JavaInterop.asResources(this)
-  }
-
   // just for debugging
 
   override def toString = {
@@ -66,3 +60,9 @@ case class MagicResource(r: Resource) extends Magic
 case class MagicResources(s: Seq[Resource]) extends Magic
 
 case class MagicProp(a: Any) extends Magic
+
+object Magic {
+  val RESOURCE = "resource"
+  val RESOURCES = "resources"
+  val PROP = "prop"
+}

@@ -4,8 +4,9 @@
 	<classpathentry kind="src" path="sample"/>
 	<classpathentry kind="src" path="spec"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="java_friendly_signatures/src"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="3p/lib/httpcomponents-client-4.2.5/lib/commons-codec-1.6.jar"/>
 	<classpathentry kind="lib" path="3p/lib/httpcomponents-client-4.2.5/lib/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="3p/lib/httpcomponents-client-4.2.5/lib/fluent-hc-4.2.5.jar"/>

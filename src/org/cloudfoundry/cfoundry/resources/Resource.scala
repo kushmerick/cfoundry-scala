@@ -8,6 +8,7 @@ import org.cloudfoundry.cfoundry.client._
 import scala.collection.mutable._
 import scala.language.dynamics
 import scala.beans._
+import scala.reflect.internal._
 import java.util.logging._
 
 class Resource(@BeanProperty var context: ClientContext)
@@ -27,10 +28,10 @@ class Resource(@BeanProperty var context: ClientContext)
   private def logger = context.getLogger
   private def token = context.getToken
   private def cache = context.getCache
-  
+
   //// quick-and-dirty type checking
-  
-  def isA(resourceClassBriefName: String) = getBriefClassName == resourceClassBriefName 
+
+  def isA(resourceClassBriefName: String) = getBriefClassName == resourceClassBriefName
 
   //// state
 
@@ -59,19 +60,20 @@ class Resource(@BeanProperty var context: ClientContext)
   //// a companion object due to subclassing.)
 
   protected def property(
-      name: String,
-      typ: String = "string",
-      source: String = null,
-      filter: Filter = null,
-      default: Option[Any] = None,
-      applicable: Boolean = true,
-      readOnly: Boolean = false,
-      parental: Boolean = false) = {
-    if (applicable)
-      properties += name -> new Property(name, typ, source, filter, default, readOnly, parental)
-    else
+    name: String,
+    typ: String = "string",
+    source: String = null,
+    default: Option[Any] = None,
+    applicable: Boolean = true,
+    readOnly: Boolean = false,
+    parental: Boolean = false) = {
+    if (applicable) {
+      val property = new Property(name, typ, source, default, readOnly, parental)
+      properties += name -> property
+    } else {
       // TODO: Flesh out the Resource hierarchy to avoid this ugliness
       properties -= name
+    }
   }
 
   private def hasProperty(name: String) = properties.contains(name)
@@ -121,7 +123,7 @@ class Resource(@BeanProperty var context: ClientContext)
   //// generate hasA from hasMany [or the other way around].)
 
   protected def hasA(parentName: String) = {
-    val parentClass = getSiblingClass(inflector.capitalize(parentName)) 
+    val parentClass = getSiblingClass(inflector.capitalize(parentName))
     parents += parentName -> parentClass
     property(parentName, typ = "resource", parental = true)
     property(parentGuidPropertyName(parentName), parental = true)
@@ -150,16 +152,16 @@ class Resource(@BeanProperty var context: ClientContext)
 
   //// loading from a cRud response
 
-  def fromPayload(payload: Payload): Resource = {
+  def fromPayload(payload: Payload): Unit = {
     fromPayload(payload, Seq("metadata", "entity"))
-    this
+    cache.touch(this)
+    isDirty = false
   }
 
   private def fromPayload(payload: Payload, keys: Seq[String]) = {
     for (key <- keys) {
       ingest(payload(key))
     }
-    isDirty = false
   }
 
   private def ingest(raw: Payload) {
@@ -323,39 +325,41 @@ class Resource(@BeanProperty var context: ClientContext)
       if (parent == null) {
         throw new InvalidParent(this, noun, value, "not a resource")
       }
-      if (parent.isLocalOnly) {
-        // TODO: Automatically save all resources in some appropriate order?
-        throw new InvalidParent(this, noun, parent, "must be saved first")
-      }
       if (!parent.isA(inflector.capitalize(noun))) {
         throw new InvalidParent(this, noun, value, s"not a '${noun}'")
       }
       setData(noun, parent)
       if (parent.hasId) {
-        setData(parentGuidPropertyName(noun), parent.getId) // <== here's why we check 'hasParent' before 'hasProperty'
+        setData(parentGuidPropertyName(noun), parent._getId)
       } else {
         clearData(parentGuidPropertyName(noun))
       }
     } else if (hasProperty(noun)) {
+      val oldId = if (noun == id && hasId) _getId else null
       setData(noun, value)
+      if (oldId != null) propogateIdToChildren(oldId)
     } else {
       throw new InvalidProperty(noun, this)
     }
     isDirty = true
   }
 
-  //// sugar for Java (TODO: Write a script that scans the Resources
-  //// and automatically generates better Java interop code!)
-
-  def o(noun: String): Magic = {
-    selectDynamic(noun)
+  private def propogateIdToChildren(oldId: String) = {
+    // For example: after changing a Service's GUID, we need to update the
+    // ServiceGUID property of ServicePlan that references this Service.
+    // Yes, this is slow; but we assume that resource ids rarely change.
+    val parentName = inflector.lowerize(getBriefClassName)
+    val pgpn = parentGuidPropertyName(parentName)
+    val guid = _getId
+    for (resource <- cache.getResources) {
+      if (resource.hasData(parentName) &&
+        resource.hasData(pgpn) &&
+        resource.getData[String](pgpn) == oldId) {
+        logger.fine(s"Propogating parent ${guid} to child ${resource} of ${this}")
+        resource.setData(pgpn, guid)
+      }
+    }
   }
-
-  def s(noun: String, value: Any): Unit = {
-    updateDynamic(noun)(value)
-  }
-
-  // TODO
 
   //// child creation & enumeration
 
@@ -371,9 +375,7 @@ class Resource(@BeanProperty var context: ClientContext)
       resources ++= payload("resources").seq.map(resourcePayload => factory.create(resourcePayload))
       path = payload("next_url").string
     } while (path != null)
-    val resources2 = resources.result
-    resources2.foreach(resource => cache.touch(resource))
-    resources2
+    resources.result
   }
 
   //// save = create if resource does not exist on the server, or update if it does
@@ -404,7 +406,7 @@ class Resource(@BeanProperty var context: ClientContext)
   def refresh(newId: String = null) = {
     if (newId != null) {
       if (hasId) {
-        logger.warning(s"Changing id of ${this} from ${getId} to ${newId}")
+        logger.warning(s"Changing id of ${this} from ${_getId} to ${newId}")
         cache.eject(this)
       }
       setData(id, newId, sudo = true)
@@ -426,35 +428,37 @@ class Resource(@BeanProperty var context: ClientContext)
       if (data.size == 1) {
         // if we just have the id, then we'll assume we're lazily
         // fetching a parent -- ie, this is not a problem
-        logger.info(s"Creating URL for ${this} ")
+        logger.info(s"Creating URL for ${this}")
       } else {
         logger.warning(s"Generating missing URLfor ${this}")
       }
-      s"${absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))}/${getId}"
+      s"${absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))}/${_getId}"
     } else {
       getData[String](url) // force exception
     }
   }
 
-  def getId = getData[String](id)
+  def _getId = getData[String](id)
   private def hasId = hasData(id)
   private def clearId = clearData(id)
 
   def attachParent(parentPropertyName: String, parent: Resource, child: Resource) = {
-    child.setData(parentPropertyName, parent)
-    child.setData(child.parentGuidPropertyName(parentPropertyName), parent.getId)
+    if (!parent.isInstanceOf[ClientResource]) {
+      child.setData(parentPropertyName, parent)
+      child.setData(child.parentGuidPropertyName(parentPropertyName), parent._getId)
+    }
   }
 
   /// absolute paths such as /v2/service_instances
 
-  private def absolutePath(): String = {
+  private def absolutePath: String = {
     absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))
   }
 
   private def absolutePath(plural_class_name: String = null) = {
     s"/v2/${plural_class_name}"
   }
-  
+
   ///// CRUD operations
 
   private def create = {
@@ -472,11 +476,11 @@ class Resource(@BeanProperty var context: ClientContext)
       val parent = if (hasData(parentName)) getData[Resource](parentName) else null
       if (parent == null && parentGuid == null) {
         throw new NotSaveable(this, parentName)
-     } else {
-        if (parent != null && parentGuid != null && parent.getId != parentGuid) {
-          throw new NotSaveable(this, s"Inconsistent parent '${parentName}': '${parentGuid}' and '${parent.getId}'")
+      } else {
+        if (parent != null && parentGuid != null && parent._getId != parentGuid) {
+          throw new NotSaveable(this, s"Inconsistent parent '${parentName}': '${parentGuid}' and '${parent._getId}'")
         }
-        if (parentGuid == null) parentGuid = parent.getId
+        if (parentGuid == null) parentGuid = parent._getId
         content.put(parent_guid_key(parentName), parentGuid)
       }
     }
@@ -489,7 +493,7 @@ class Resource(@BeanProperty var context: ClientContext)
   }
 
   private def update = {
-    val metadata = Map(id -> getId)
+    val metadata = Map(id -> _getId)
     val entity = null // TODO
     val payload = Map("metadata" -> metadata, "entity" -> entity)
     performAndReload(() => crud.crUd(getUrl)(options)(Some(Payload(payload))))
@@ -532,7 +536,7 @@ class Resource(@BeanProperty var context: ClientContext)
           .values
           .filter(property => (property.hasDefault || hasData(property)) && !isVerbose(property))
           .map(property => property.name -> getData(property))
-        .toMap)
+          .toMap)
       .toString
     s += '>'
     s.result
@@ -544,69 +548,13 @@ class Resource(@BeanProperty var context: ClientContext)
     if (isLocalOnly) s ++= "L"
     s.result
   }
-  
+
   private def isVerbose(property: Property) = {
     property.parental &&
-    ({
-       val p = parentGuidPropertyName(property.name)
-       hasProperty(p) && hasData(p)
-    })
+      ({
+        val p = parentGuidPropertyName(property.name)
+        hasProperty(p) && hasData(p)
+      })
   }
 
 }
-
-/*
-
-
-REQUEST: POST https://api.go.cloudfoundry.com/v2/service_instances
-REQUEST_HEADERS:
-  Accept : application/json
-  Authorization : bearer eyJhbGciOiJSUzI1NiJ9.eyJqdGkiOiIzZDFiNDVmMC01NGVkLTRmMDgtOTQ4Ni1iNDk1YjIzOWI1NDMiLCJzdWIiOiJjMWU1ODg4NC1jODIwLTQ5NDEtODNkYi05NDk4NDhkMzZkMzYiLCJzY29wZSI6WyJwYXNzd29yZC53cml0ZSIsIm9wZW5pZCIsImNsb3VkX2NvbnRyb2xsZXIud3JpdGUiLCJjbG91ZF9jb250cm9sbGVyLnJlYWQiXSwiY2xpZW50X2lkIjoiY2YiLCJjaWQiOiJjZiIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsInVzZXJfaWQiOiJjMWU1ODg4NC1jODIwLTQ5NDEtODNkYi05NDk4NDhkMzZkMzYiLCJ1c2VyX25hbWUiOiJuaWNob2xhc2tAdm13YXJlLmNvbSIsImVtYWlsIjoibmljaG9sYXNrQHZtd2FyZS5jb20iLCJpYXQiOjEzNjk0NDg5NTgsImV4cCI6MTM2OTQ5MjE1OCwiaXNzIjoiaHR0cHM6Ly91YWEuZ28uY2xvdWRmb3VuZHJ5LmNvbS9vYXV0aC90b2tlbiIsImF1ZCI6WyJzY2ltIiwib3BlbmlkIiwiY2xvdWRfY29udHJvbGxlciIsInBhc3N3b3JkIl19.x4tWO-NYdJ23Dary5XAl8sjnYxTcZPlMAkSbisJcNhmWkKgi0EwJCU_Zu4YEzoL8HwB_Ra9j47X_P0YXldoxSCxXZDoJXjkA1UVGL4ohtluVlmF-WdIwys6Vg-JU1AHiHNt9ZCNfQBHbZyKFPsN_p2Jj_ILMUrQqd3c2Lio0_NuG47X9Y0tfRkHN2AsH-mtTH_Lp5ovxZ7CNWUZ2uR4Jk7SAua3h8KBGiIS1vzvGN66N0SqN5i0NnmMk2Ng-MBS_qkV1d7h24tS4eX9e--YW1tPqEFulptJ5NXoEmPi8eln2qg4LWtWcTtvJ9OEHjnBYD2NHNWrGNbm3RueQNlfMKA
-  Content-Length : 137
-  Content-Type : application/json
-REQUEST_BODY: {"space_guid":"127665e2-a9f5-452d-8b37-f1df7096c1cb","name":"rds-mysql-4a256","service_plan_guid":"88f404ab-1888-46e1-8d8a-d5d678e971da"}                                                                                                    .  RESPONSE: [201]
-RESPONSE_HEADERS:
-  connection : keep-alive
-  content-length : 1151
-  content-type : application/json;charset=utf-8
-  date : Sat, 25 May 2013 02:30:57 GMT
-  location : /v2/service_instances/861ccfab-8131-4875-b5cf-9a06fe3c5a52
-  server : nginx
-  x-frame-options : sameorigin
-  x-vcap-request-id : 68cf9b1c-ba72-45e6-8d52-e0c4bf3cb3ac
-  x-xss-protection : 1; mode=block
-RESPONSE_BODY:
-{
-  "metadata": {
-    "guid": "861ccfab-8131-4875-b5cf-9a06fe3c5a52",
-    "url": "/v2/service_instances/861ccfab-8131-4875-b5cf-9a06fe3c5a52",
-    "created_at": "2013-05-25 02:30:57 +0000",
-    "updated_at": null
-  },
-  "entity": {
-    "name": "rds-mysql-4a256",
-    "credentials": {
-      "name": "d52084060ab0d497b8a873c208baf685d",
-      "hostname": "mysql-service-public.clqg2e2w3ecf.us-east-1.rds.amazonaws.com",
-      "host": "mysql-service-public.clqg2e2w3ecf.us-east-1.rds.amazonaws.com",
-      "port": 3306,
-      "user": "usH042nsPn42m",
-      "username": "usH042nsPn42m",
-      "password": "pwXhEHE7MOsrL",
-      "node_id": "rds_mysql_node_10mb_0"
-    },
-    "service_plan_guid": "88f404ab-1888-46e1-8d8a-d5d678e971da",
-    "space_guid": "127665e2-a9f5-452d-8b37-f1df7096c1cb",
-    "gateway_data": {
-      "plan": "10mb",
-      "version": "n/a"
-    },
-    "dashboard_url": null,
-    "service_bindings_url": "/v2/service_instances/861ccfab-8131-4875-b5cf-9a06fe3c5a52/service_bindings",
-    "space_url": "/v2/spaces/127665e2-a9f5-452d-8b37-f1df7096c1cb",
-    "service_plan_url": "/v2/service_plans/88f404ab-1888-46e1-8d8a-d5d678e971da"
-  }
-}
-<<<     
-
-*/ 

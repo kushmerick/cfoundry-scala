@@ -1,38 +1,39 @@
-<!-- this just builds the static bindings -->
+<!-- this just builds the Java-friendly signatures -->
 
 <project>
 
     <property name="scala_lib_dir" value="${eclipse.home}\configuration\org.eclipse.osgi\bundles\959\1\.cp\lib"/>
 
 	<target name="clean">
-		<delete dir="static_bindings" />
+		<delete dir="java_friendly_signatures/src" excludes="java_friendly_signatures/src" includeemptydirs="true"/>
 	</target>
 
-	<target name="static_bindings">
+	<target name="java_friendly_signatures">
 		<taskdef resource="net/sf/antcontrib/antlib.xml">
 			<classpath>
-				<pathelement location="3p/lib/ant-contrib/ant-contrib-1.0b3.jar" />
+				<pathelement location="3p/lib/ant-contrib/ant-contrib-1.0b3.jar"/>
 			</classpath>
 		</taskdef>
-		<mkdir dir="static_bindings/src" />
+		<mkdir dir="java_friendly_signatures/src"/>
 		<for param="infile">
 			<fileset dir="src/org/cloudfoundry/cfoundry/resources">
-				<include name="*.scala" />
+				<include name="*.scala"/>
+			</fileset>
+			<fileset dir="src/org/cloudfoundry/cfoundry/client">
+				<include name="Client.scala"/>
 			</fileset>
 			<sequential>
-				<java classname="org.cloudfoundry.cfoundry.static_bindings.Generate">
-					<arg value="@{infile}" />
-					<arg value="static_bindings/src" />
+				<java classname="org.cloudfoundry.cfoundry.java_friendly.Generate">
+					<arg value="@{infile}"/>
+					<arg value="${basedir}/java_friendly_signatures/src"/>
 					<classpath>
-						<pathelement location="bin" />
-						<pathelement location="${scala_lib_dir}/scala-library.jar" />
-						<pathelement path="${java.class.path}" />
+						<pathelement location="bin"/>
+						<pathelement location="${scala_lib_dir}/scala-library.jar"/>
+						<pathelement path="${java.class.path}"/>
 					</classpath>
 				</java>
 			</sequential>
 		</for>
-		<mkdir dir="static_bindings/classes" />
-		<javac srcdir="static_bindings/src" destdir="static_bindings/classes" includeantruntime="false"/>
 	</target>
 
 </project>

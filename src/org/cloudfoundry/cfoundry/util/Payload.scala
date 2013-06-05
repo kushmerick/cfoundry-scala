@@ -4,8 +4,6 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.http._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
-import scala.reflect.runtime._
-import scala.reflect.runtime.universe._
 import java.io._
 
 /*
@@ -22,10 +20,10 @@ class Payload(val obj: Any) {
 
   //// map
 
-  private type M = scala.collection.Map[String,Any]
+  private type M = scala.collection.Map[String, Any]
 
   lazy val isMap = obj.isInstanceOf[M]
-  
+
   private lazy val _map = asA[M]
 
   lazy val map = try {
@@ -70,7 +68,7 @@ class Payload(val obj: Any) {
    * [++//++] We might see a cast class exception, due to erasure; see
    * http://www.scala-lang.org/api/current/index.html#scala.Any@asInstanceOf[T0]:T0
    */
-  
+
   //// string
 
   lazy val isString = obj.isInstanceOf[String]
@@ -101,7 +99,7 @@ class Payload(val obj: Any) {
 
   lazy val isDouble = obj.isInstanceOf[Double] || obj.isInstanceOf[Int]
 
-  lazy val double = try {
+  lazy val double: java.lang.Double = try {
     asA[Double]
   } catch {
     case x: Exception => try {
@@ -113,18 +111,19 @@ class Payload(val obj: Any) {
 
   lazy val isInt = isDouble
 
-  lazy val int = double.toInt
+  lazy val int: java.lang.Integer = double.toInt
 
   lazy val isTrueInt = isInt && double == int
 
   lazy val isBool = obj.isInstanceOf[Boolean]
 
-  lazy val bool = {
+  lazy val bool: java.lang.Boolean = {
     obj != null && (obj match {
       case b: Boolean => b
       case n: Number => n != 0
       case s: String => TRUEs.exists(t => s.equalsIgnoreCase(t))
       case _ => false
+      // TODO: What about java.lang.Boolean, java.lang.Boolean.TYPE and many many more?
     })
   }
 
@@ -138,11 +137,8 @@ class Payload(val obj: Any) {
     case x: Exception => unexpectedType(obj, x)
   }
 
-  private lazy val mirror = runtimeMirror(getClass.getClassLoader).reflect(this)
-
   def as(typ: String) = try {
-    val method = mirror.symbol.typeSignature.member(newTermName(typ)).asMethod
-    mirror.reflectMethod(method)()
+    getClass.getMethod(typ).invoke(this)
   } catch {
     case x: Exception => unexpectedType(obj, x)
   }

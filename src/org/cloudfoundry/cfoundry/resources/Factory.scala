@@ -16,12 +16,22 @@ class Factory(noun: String, context: ClientContext) extends ClassNameUtilities {
     getSiblingClass(inflector.capitalize(inflector.singularize(noun)))
   }
 
-  lazy val create: Resource = {
+  def create: Resource = {
     resourceClass.getConstructors()(0).newInstance(context).asInstanceOf[Resource]
   }
 
   def create(payload: Payload): Resource = {
-    create.fromPayload(payload)
+    val id = payload("metadata")("guid").string
+    val cache = context.getCache
+    val resource: Resource =
+      if (cache.contains(id)) {
+        context.getLogger.fine(s"Retrieving resource ${id} from cache")
+        cache.get(id)
+      } else {
+        create
+      }
+    resource.fromPayload(payload)
+    resource
   }
 
 }
