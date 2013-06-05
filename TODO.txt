@@ -1,0 +1,5 @@
+- implement "update" (https://github.com/kushmerick/cfoundry-scala/blob/master/src/org/cloudfoundry/cfoundry/resources/Resource.scala#L495)
+
+- all properties & relationships of all resources; application bits & files will require special code 
+
+- eliminate declarations: if CC sends "foo_guid" then infer parent Foo; if CC sends "foos_url" then infer child Foo; otherwise infer property "foo".
