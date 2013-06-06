@@ -43,10 +43,9 @@ class Resource(@BeanProperty var context: ClientContext)
 
   private var isDirty: Boolean = false
 
-  // just for static_bindings/Generate 
+  // just for java_friendly/Generate 
   def getProperties = properties
   def getChildren = children
-  def getParents = parents
 
   //// most resources have these properties, though subclasses might
   //// declare the property again, for example to override 'source'
@@ -277,8 +276,15 @@ class Resource(@BeanProperty var context: ClientContext)
         if (!hasData(parentName)) {
           if (hasData(pgpn)) {
             // lazily load the resource
-            val parent = factoryFor(noun).create
-            parent.refresh(getData[String](pgpn))
+            val parentGuid = getData[String](pgpn)
+            val parent =
+              if (cache.contains(parentGuid)) {
+            	logger.fine(s"Retrieving resource ${parentGuid} from cache")
+                cache.get(parentGuid)
+              } else {
+                factoryFor(noun).create
+              }
+            parent.refresh(parentGuid)
             attachParent(parentName, parent, this)
           } else {
             throw new MultipleCauses(
@@ -438,7 +444,10 @@ class Resource(@BeanProperty var context: ClientContext)
     }
   }
 
+  // this need to be public for Cache, so the "_" is to avoid collision
+  // with "getId" from java_friendly/Generate 
   def _getId = getData[String](id)
+
   private def hasId = hasData(id)
   private def clearId = clearData(id)
 

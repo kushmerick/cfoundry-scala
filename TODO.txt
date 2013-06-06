@@ -1,3 +1,5 @@
+- write script to bump version and package up as a JAR
+
 - implement "update" (https://github.com/kushmerick/cfoundry-scala/blob/master/src/org/cloudfoundry/cfoundry/resources/Resource.scala#L495)
 
 - all properties & relationships of all resources; application bits & files will require special code 

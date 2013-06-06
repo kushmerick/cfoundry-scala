@@ -29,7 +29,9 @@ class Cache(capacity: Int) {
   }
 
   def get(id: String) = {
-    history(id).resource
+    val resource = history(id).resource
+    touch(resource)
+    resource
   }
 
   def getResources: Seq[Resource] = {
@@ -78,7 +80,7 @@ class Cache(capacity: Int) {
   }
 
   private def eldest = {
-    cache.iterator.next
+    cache.firstKey
   }
 
 }
