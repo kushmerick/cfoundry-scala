@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-06-05 15:51:43.279 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-06-05 17:04:18.933 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.resources.java_friendly
 import scala.collection.JavaConversions._
 trait OrganizationJF {
