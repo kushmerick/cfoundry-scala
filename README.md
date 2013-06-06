@@ -7,7 +7,7 @@ cfoundry-scala is a Scala client for [Cloud Foundry](http://cloudfoundry.com).
 In Scala, the syntax for retrieving and manipulating CF resources resembles
 navigating through a complex local datastructure.
 
-    val client: Client = new Client(target)
+    val client = new Client(target)
     client.login(username, password)
     for (service <- client.services) {
       for (servicePlan <- service.servicePlans) {
