@@ -21,7 +21,8 @@ shows many more details, such as creating new objects.
 
 ## Using cfoundry-scala from Java
 
-cfoundry-scala also exposes a statically-typed Java-friendly (getFoo, setFoo, newFoo) API:   
+cfoundry-scala also exposes a statically-typed
+[Java-friendly (getFoo, setFoo, newFoo) API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry):   
 
     Client client = new Client(target);
     client.login(username, password);
@@ -49,3 +50,8 @@ resource:
       hasMany("servicePlan")
         ...
     }
+
+The [Java-friendly API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry)
+is [automatically generated](https://github.com/kushmerick/cfoundry-scala/blob/master/build.xml) from these resource specifications.
+I will [reimplement](https://github.com/kushmerick/cfoundry-scala/blob/master/compost/macros/macros/Macros.scala)
+ this API using [Scala macros](http://scalamacros.org) when support for adding new class members is ready for prime time.

@@ -5,3 +5,5 @@
 - all properties & relationships of all resources; application bits & files will require special code 
 
 - eliminate declarations: if CC sends "foo_guid" then infer parent Foo; if CC sends "foos_url" then infer child Foo; otherwise infer property "foo".
+
+- reimplement Java friendliness with the Scala macro feature when it supports adding new members to a class
