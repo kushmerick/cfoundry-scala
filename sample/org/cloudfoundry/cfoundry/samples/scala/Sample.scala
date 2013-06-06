@@ -8,7 +8,7 @@ import java.util.logging._
 object Sample extends scala.App {
 
   val (target, username, password) = arguments
-  val client: Client = new Client(target, logger)
+  val client = new Client(target, logger)
 
   client.login(username, password)
 
