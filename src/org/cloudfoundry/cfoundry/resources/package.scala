@@ -1,8 +1,8 @@
 package org.cloudfoundry.cfoundry
 
-package object resources {
+import scala.language.implicitConversions
 
-  import scala.language.implicitConversions
+package object resources {
 
   implicit def magic2resource(magic: Magic) = magic.resource
   implicit def magic2resources(magic: Magic) = magic.resources

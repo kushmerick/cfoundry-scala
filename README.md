@@ -1,11 +1,23 @@
 # cfoundry-scala
 
-cfoundry-scala is a Scala client for [Cloud Foundry](http://cloudfoundry.com).
+cfoundry-scala is a Scala client for [Cloud
+Foundry](http://cloudfoundry.com).
+
+cfoundry-scala is a work-in-progress!  The client is basically
+stable/functional with no known bugs.  But it does not yet support
+several CF resources (e.g. users, routes, domains, quotas, stacks),
+and support for other resources is incomplete (e.g., you can't upload
+an apps bits, or persist changes to existing resources).
+
+## Installation
+
+Download the [cfoundry-scala JAR](http://coming.soon) and add it to
+your classpath.
 
 ## Using cfoundry-scala from Scala
 
-In Scala, the syntax for retrieving and manipulating CF resources resembles
-navigating through a complex local datastructure.
+In Scala, the syntax for retrieving and manipulating CF resources
+resembles navigating through a complex local datastructure.
 
     val client = new Client(target)
     client.login(username, password)
@@ -16,13 +28,15 @@ navigating through a complex local datastructure.
     }
     client.logout
     
-The full [Scala sample](https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry/cfoundry/samples/scala)
-shows many more details, such as creating new objects.    
+The full [Scala
+sample](https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry/cfoundry/samples/scala)
+shows many more details, such as creating new objects.
 
 ## Using cfoundry-scala from Java
 
-cfoundry-scala also exposes a statically-typed
-[Java-friendly (getFoo, setFoo, newFoo) API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry):   
+cfoundry-scala also exposes a statically-typed [Java-friendly (getFoo,
+setFoo, newFoo)
+API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry):
 
     Client client = new Client(target);
     client.login(username, password);
@@ -33,14 +47,19 @@ cfoundry-scala also exposes a statically-typed
     }
     client.logout();
  
-For more details, see the full [Java sample](https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry/cfoundry/samples/java).
+For more details, see the full [Java
+sample](https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry/cfoundry/samples/java).
+
+(Of course, Scala code can also consume the statically-typed API!)
 
 ## Implementation details
 
-Like the [cfoundry Ruby client](http://github.com/cloudfoundry/cfoundry), cfoundry-scala relies on
-metaprogramming so that each CF resource is specified in a simple declarative manner.  For example, here is the
+Like the [cfoundry Ruby
+client](http://github.com/cloudfoundry/cfoundry), cfoundry-scala
+relies on metaprogramming so that each CF resource is specified in a
+simple declarative manner.  For example, here is the
 [Service](https://github.com/kushmerick/cfoundry-scala/blob/master/src/org/cloudfoundry/cfoundry/resources/Service.scala)
-resource: 
+resource:
 
     class Service ... {
       property("name", source = "label")
@@ -51,7 +70,11 @@ resource:
         ...
     }
 
-The [Java-friendly API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry)
-is [automatically generated](https://github.com/kushmerick/cfoundry-scala/blob/master/build.xml) from these resource specifications.
-I will [reimplement](https://github.com/kushmerick/cfoundry-scala/blob/master/compost/macros/macros/Macros.scala)
- this API using [Scala macros](http://scalamacros.org) when support for adding new class members is ready for prime time.
+The [Java-friendly
+API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry)
+is [automatically
+generated](https://github.com/kushmerick/cfoundry-scala/blob/master/build.xml)
+from these resource specifications.  I will
+[reimplement](https://github.com/kushmerick/cfoundry-scala/blob/master/compost/macros/macros/Macros.scala)
+this API using [Scala macros](http://scalamacros.org) when support for
+adding new class members is ready for prime time.
