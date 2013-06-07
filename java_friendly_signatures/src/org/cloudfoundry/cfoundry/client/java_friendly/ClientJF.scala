@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-06-06 15:24:04.707 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-06-06 20:05:33.053 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.client.java_friendly
 import scala.collection.JavaConversions._
 trait ClientJF {
