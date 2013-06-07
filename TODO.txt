@@ -1,5 +1,3 @@
-- write script to bump version and package up as a JAR
-
 - better unit test coverage; finish mock HTTP CRUDer
 
 - implement "update"
@@ -11,9 +9,10 @@
 - support for dependencies that hang off resources: app bits & files,
   and user roles.
 
-- eliminate declarations: if CC sends "foo_guid" then infer parent
+- eliminate declarations: keep entire payload from CC rather than
+  plucking out known items; if CC sends "foo_guid" then infer parent
   Foo; if CC sends "foos_url" then infer child Foo; otherwise infer
-  property "foo".
+  property "foo" (but we lose static typing).
 
 - reimplement Java friendliness with the Scala macro feature when it
   supports adding new members to a class

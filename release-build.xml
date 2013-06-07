@@ -1,0 +1,42 @@
+<!-- this just builds the release JARs & ZIPs -->
+
+<project>
+
+    <property name="scala_lib_dir" value="${eclipse.home}\configuration\org.eclipse.osgi\bundles\959\1\.cp\lib"/>
+
+	<target name="get-version">
+		<java classname="org.cloudfoundry.cfoundry.Version" outputproperty="version">
+			<classpath>
+				<pathelement location="bin"/>
+				<pathelement location="${scala_lib_dir}/scala-library.jar"/>
+				<pathelement path="${java.class.path}"/>
+			</classpath>
+		</java>
+	</target>
+
+	<target name="release-jar" depends="get-version">
+		<mkdir dir="releases"/>
+		<property name="jarfile" value="releases/cfoundry-scala-${version}.jar"/>
+		<jar basedir="bin" destfile="${jarfile}"/>
+	</target>
+
+	<target name="complete-zip" depends="release-jar">
+		<mkdir dir="releases"/>
+		<property name="zipfile" value="releases/cfoundry-scala-${version}-complete.zip"/>
+		<zip destfile="${zipfile}" update="true">
+			<mappedresources>
+				<fileset dir="." includes="${jarfile}"/>
+				<flattenmapper/>
+			</mappedresources>
+			<mappedresources>
+				<fileset dir="3p" includes="**/*.jar"/>
+				<flattenmapper/>
+			</mappedresources>
+			<mappedresources>
+			    <fileset dir="${scala_lib_dir}" includes="**/*.jar"/>
+				<flattenmapper/>
+			</mappedresources>
+		</zip>
+	</target>
+
+</project>
