@@ -3,7 +3,8 @@
 cfoundry-scala is a Scala client for [Cloud
 Foundry](http://cloudfoundry.com).
 
-cfoundry-scala is a work-in-progress!  The client is basically
+cfoundry-scala is a [work-in-progress](https://github.com/kushmerick/cfoundry-scala/blob/master/TODO.txt)!
+The client is basically
 stable/functional with no known bugs.  But it does not yet support
 several CF resources (e.g. users, routes, domains, quotas, stacks),
 and support for other resources is incomplete (e.g., you can't upload
