@@ -11,8 +11,12 @@ an apps bits, or persist changes to existing resources).
 
 ## Installation
 
-Download the [cfoundry-scala JAR](http://coming.soon) and add it to
-your classpath.
+Download the latest "[cfoundry-scala-*.jar](https://github.com/kushmerick/cfoundry-scala/tree/master/releases)"
+and add it to your classpath.
+
+cfoundry-scala depends on a bunch of other JARs.  For convenience,
+"cfoundry-scala-*.jar" and all its dependencies are available as
+"cfoundry-scala-*-complete.zip".
 
 ## Using cfoundry-scala from Scala
 
