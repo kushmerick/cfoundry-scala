@@ -78,7 +78,7 @@ resource:
 The [Java-friendly
 API](https://github.com/kushmerick/cfoundry-scala/tree/master/java_friendly_signatures/src/org/cloudfoundry/cfoundry)
 is [automatically
-generated](https://github.com/kushmerick/cfoundry-scala/blob/master/build.xml)
+generated](https://github.com/kushmerick/cfoundry-scala/tree/master/tools/java-friendly-generator)
 from these resource specifications.  I will
 [reimplement](https://github.com/kushmerick/cfoundry-scala/blob/master/compost/macros/macros/Macros.scala)
 this API using [Scala macros](http://scalamacros.org) when support for
