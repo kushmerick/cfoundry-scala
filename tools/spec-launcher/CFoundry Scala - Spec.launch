@@ -9,6 +9,13 @@
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="4"/>
 </listAttribute>
+<mapAttribute key="org.eclipse.debug.core.environmentVariables">
+<mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures"/>
+<mapEntry key="CFPASSWORD" value="${cfpassword}"/>
+<mapEntry key="CFTARGET" value="${cftarget}"/>
+<mapEntry key="CFTESTMODE" value="learn"/>
+<mapEntry key="CFUSERNAME" value="${cfusername}"/>
+</mapAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.cloudfoundry.cfoundry"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="cfoundry-scala"/>
 </launchConfiguration>

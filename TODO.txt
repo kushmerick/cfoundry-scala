@@ -9,10 +9,17 @@
 - support for dependencies that hang off resources: app bits & files,
   and user roles.
 
-- eliminate declarations: keep entire payload from CC rather than
-  plucking out known items; if CC sends "foo_guid" then infer parent
-  Foo; if CC sends "foos_url" then infer child Foo; otherwise infer
-  property "foo" (but we lose static typing).
+- Eliminate all the code for each CF resource and it's
+  properties/children/parents.  Two versions:
+
+   o Grab the entire payload from CC rather than plucking out known
+    items; if CC sends "foo_guid" then infer parent Foo; if CC sends
+    "foos_url" then infer child Foo; otherwise infer property "foo"
+    (but we lose static typing -- so this is a bad idea).
+
+  o Write a script to load CF cloud controller and use Ruby reflection
+    to automatically generate the corresponding cfoundry-scala CF
+    resource specifications.
 
 - reimplement Java friendliness with the Scala macro feature when it
   supports adding new members to a class

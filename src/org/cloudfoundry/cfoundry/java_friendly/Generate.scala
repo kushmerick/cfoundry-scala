@@ -76,7 +76,7 @@ object Generate extends scala.App with ClassNameUtilities {
       } else if (resource.hasChildren(inflector.singularize(property.name))) {
         (getListPropertyClassName(property), getSeqPropertyClassName(property), Magic.RESOURCES)
       } else {
-        val returnType = getPayloadTypeName(property.typ)
+        val returnType = getChaliceTypeName(property.typ)
         (returnType, returnType, Magic.PROP)
       }
     methods += makeGetter(property.name, returnType, actualType, deMagicifier)
@@ -86,7 +86,7 @@ object Generate extends scala.App with ClassNameUtilities {
         if (resource.hasParent(property.name)) {
           getSiblingClass(inflector.capitalize(property.name), resource.getClass).getName
         } else {
-          getPayloadTypeName(property.typ)
+          getChaliceTypeName(property.typ)
         }
       methods += makeSetter(property.name, valueType)
     }
@@ -133,8 +133,8 @@ object Generate extends scala.App with ClassNameUtilities {
     "def new" + inflector.capitalize(name) + ": " + resourceType + " = selectDynamic(\"" + name + "\").resource.asInstanceOf[" + resourceType + "]"
   }
 
-  def getPayloadTypeName(typ: String) = {
-    classOf[Payload].getMethod(typ).getReturnType.getName
+  def getChaliceTypeName(typ: String) = {
+    classOf[Chalice].getMethod(typ).getReturnType.getName
   }
 
   def writeMethods(resourceClass: Class[_], methods: Seq[String]) {
@@ -171,7 +171,7 @@ object Generate extends scala.App with ClassNameUtilities {
 
   import org.cloudfoundry.cfoundry.http.mock._
   class FakeClient extends AbstractClient[MockCRUD](MockCRUD.factory, "foo", null) {
-    override protected lazy val cloudfoundryVersion: Integer = 0
+    override protected lazy val cloudfoundryVersion = 0
   }
 
   def populateClientChildren(client: FakeClient) {

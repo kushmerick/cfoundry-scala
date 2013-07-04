@@ -36,7 +36,7 @@ class Resource(@BeanProperty var context: ClientContext)
   //// state
 
   private val properties = Map[String, Property]()
-  private val data: Map[String, Payload] = Map[String, Payload]()
+  private val data: Map[String, Chalice] = Map[String, Chalice]()
 
   private val children = Set[String]()
   private val parents = Map[String, Class[_]]()
@@ -151,32 +151,33 @@ class Resource(@BeanProperty var context: ClientContext)
 
   //// loading from a cRud response
 
-  def fromPayload(payload: Payload): Unit = {
-    fromPayload(payload, Seq("metadata", "entity"))
+  def fromInfo(info: Chalice): Unit = {
+    fromInfo(info, Seq("metadata", "entity"))
     cache.touch(this)
     isDirty = false
   }
 
-  private def fromPayload(payload: Payload, keys: Seq[String]) = {
+  private def fromInfo(info: Chalice, keys: Seq[String]) = {
     for (key <- keys) {
-      ingest(payload(key))
+      ingest(info(key))
     }
   }
 
-  private def ingest(raw: Payload) {
+  private def ingest(raw: Chalice) {
     for ((key, value) <- raw.map) {
       val propertyName: String =
         if (hasProperty(key))
-          key // service.version
+          // eg service.version
+          key
         else
           propertyForSource(key) match {
             case Some(property) => {
-              // service.name from key label
+              // eg service.name from key label
               property.name
             }
             case None => {
               if (is_parent_guid_key(key)) {
-                // service.servicePlanGuid from key service_plan_guid
+                // eg service.servicePlanGuid from key service_plan_guid
                 parent_guid_key_to_parentGuidPropertyName(key)
               } else {
                 null
@@ -197,19 +198,19 @@ class Resource(@BeanProperty var context: ClientContext)
   private def hasData(property: Property): Boolean = hasData(property.name)
   private def hasData(propertyName: String) = data.contains(propertyName)
 
-  protected def setData(property: Property, value: Payload): Unit = setData(property, value, false)
-  protected def setData(property: Property, value: Payload, sudo: Boolean): Unit = {
+  protected def setData(property: Property, value: Chalice): Unit = setData(property, value, false)
+  protected def setData(property: Property, value: Chalice, sudo: Boolean): Unit = {
     if (!sudo && property.readOnly) throw new ReadOnly(property, value, this)
     data.put(property.name, value)
   }
 
   protected def setData(property: Property, value: Any): Unit = setData(property, value, false)
   protected def setData(property: Property, value: Any, sudo: Boolean): Unit = {
-    setData(property, Payload(value), sudo)
+    setData(property, Chalice(value), sudo)
   }
 
-  protected def setData(propertyName: String, value: Payload): Unit = setData(propertyName, value, false)
-  protected def setData(propertyName: String, value: Payload, sudo: Boolean): Unit = {
+  protected def setData(propertyName: String, value: Chalice): Unit = setData(propertyName, value, false)
+  protected def setData(propertyName: String, value: Chalice, sudo: Boolean): Unit = {
     if (hasProperty(propertyName)) {
       setData(properties(propertyName), value, sudo)
     } else {
@@ -219,7 +220,7 @@ class Resource(@BeanProperty var context: ClientContext)
 
   protected def setData(propertyName: String, value: Any): Unit = setData(propertyName, value, false)
   def setData(propertyName: String, value: Any, sudo: Boolean): Unit = {
-    setData(propertyName, Payload(value), sudo)
+    setData(propertyName, Chalice(value), sudo)
   }
 
   private def clearData(propertyName: String) = data.remove(propertyName)
@@ -232,13 +233,19 @@ class Resource(@BeanProperty var context: ClientContext)
     }
   }
 
+  // Default values can be specified lazily with a function to
+  // retrieve the value, rather than the value itself; see for
+  // example note [!!&&**&&!!] in AbstractClient
+  type LazyDefault = () => Any
+
   def getData[T](property: Property): T = {
     if (hasProperty(property)) {
       if (hasData(property)) {
         data(property.name).as(property.typ).asInstanceOf[T]
       } else {
         property.default match {
-          case Some(value) => value.asInstanceOf[T]
+          case Some(func: LazyDefault) => func().asInstanceOf[T]
+          case Some(value: Any) => value.asInstanceOf[T]
           case None => throw new MissingRequiredProperty(this, property)
         }
       }
@@ -279,7 +286,7 @@ class Resource(@BeanProperty var context: ClientContext)
             val parentGuid = getData[String](pgpn)
             val parent =
               if (cache.contains(parentGuid)) {
-            	logger.fine(s"Retrieving resource ${parentGuid} from cache")
+                logger.fine(s"Retrieving resource ${parentGuid} from cache")
                 cache.get(parentGuid)
               } else {
                 factoryFor(noun).create
@@ -378,7 +385,7 @@ class Resource(@BeanProperty var context: ClientContext)
     val resources = new ArrayBuilder.ofRef[Resource]
     do {
       val payload = perform(() => crud.cRud(path)(options))
-      resources ++= payload("resources").seq.map(resourcePayload => factory.create(resourcePayload))
+      resources ++= payload("resources").seq.map(pload => factory.create(pload))
       path = payload("next_url").string
     } while (path != null)
     resources.result
@@ -493,7 +500,7 @@ class Resource(@BeanProperty var context: ClientContext)
         content.put(parent_guid_key(parentName), parentGuid)
       }
     }
-    val payload = Payload(JSON.serialize(Payload(content)))
+    val payload = Chalice(JSON.serialize(Chalice(content)))
     performAndReload(() => crud.Crud(absolutePath)(options)(Some(payload)))
   }
 
@@ -505,7 +512,7 @@ class Resource(@BeanProperty var context: ClientContext)
     val metadata = Map(id -> _getId)
     val entity = null // TODO
     val payload = Map("metadata" -> metadata, "entity" -> entity)
-    performAndReload(() => crud.crUd(getUrl)(options)(Some(Payload(payload))))
+    performAndReload(() => crud.crUd(getUrl)(options)(Some(Chalice(payload))))
   }
 
   private def delete = {
@@ -518,7 +525,12 @@ class Resource(@BeanProperty var context: ClientContext)
   }
 
   private def performAndReload(performer: () => Response) = {
-    fromPayload(perform(performer))
+    // TODO: I think this is wrong.  fromInfo expects a single 'resource'
+    // structure from the response payload.  But this gives it the entire
+    // payload.  It should be something like:
+    // fromInfo(perform(performer)("resources").seq.first)
+    // OTOH, it is working fine now for Crud and cRud??!!
+    fromInfo(perform(performer))
   }
 
   protected def perform(performer: () => Response) = {
@@ -540,15 +552,23 @@ class Resource(@BeanProperty var context: ClientContext)
       s ++= " "
     }
     s ++=
-      Payload(
+      Chalice(
         properties
           .values
           .filter(property => (property.hasDefault || hasData(property)) && !isVerbose(property))
-          .map(property => property.name -> getData(property))
+          .map(property => property.name -> safeGetData(property))
           .toMap)
       .toString
     s += '>'
     s.result
+  }
+
+  def safeGetData(property: Property) = {
+    try {
+      getData(property).toString
+    } catch {
+      case x: Exception => s"{${x}}"
+    }
   }
 
   protected def toStringDecoration = {

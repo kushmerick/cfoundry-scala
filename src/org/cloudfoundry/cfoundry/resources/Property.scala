@@ -8,7 +8,7 @@ class Property(
   val readOnly: Boolean,
   val parental: Boolean) {
 
-  def hasDefault = default.isInstanceOf[Some[Any]]
+  def hasDefault = default.isDefined
   def getTrueSource = if (source == null) name else source
 
 }

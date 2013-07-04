@@ -1,0 +1,1 @@
+{"/info": {"NONE": {"code": 200.0, "payload": {"support": "http://support.cloudfoundry.com", "token_endpoint": "https://uaa.run.pivotal.io", "name": "vcap", "description": "Cloud Foundry sponsored by Pivotal", "build": "2222", "version": 2.0, "authorization_endpoint": "https://login.run.pivotal.io", "allow_debug": true}}}}

@@ -8,25 +8,25 @@ abstract class CRUD(var endpoint: String, val logger: Logger = null) {
 
   //// the four operations
 
-  def Crud(path: PathComponent*)(options: Option[Pairs] = None)(payload: Option[Payload] = None): Response = {
-    Crud(path, options, payload)
+  def Crud(path: PathComponent*)(headers: Option[Pairs] = None)(payload: Option[Chalice] = None): Response = {
+    Crud(path, headers, payload)
   }
-  def Crud(path: Path, options: Option[Pairs], payload: Option[Payload]): Response
+  def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response
 
-  def cRud(path: PathComponent*)(options: Option[Pairs] = None): Response = {
-    cRud(path, options)
+  def cRud(path: PathComponent*)(headers: Option[Pairs] = None): Response = {
+    cRud(path, headers)
   }
-  def cRud(path: Path, options: Option[Pairs]): Response
+  def cRud(path: Path, headers: Option[Pairs]): Response
 
-  def crUd(path: PathComponent*)(options: Option[Pairs] = None)(payload: Option[Payload] = None): Response = {
-    crUd(path, options, payload)
+  def crUd(path: PathComponent*)(headers: Option[Pairs] = None)(payload: Option[Chalice] = None): Response = {
+    crUd(path, headers, payload)
   }
-  def crUd(path: Path, options: Option[Pairs], payload: Option[Payload]): Response
+  def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response
 
-  def cruD(path: PathComponent*)(options: Option[Pairs] = None): Response = {
-    cruD(path, options)
+  def cruD(path: PathComponent*)(headers: Option[Pairs] = None): Response = {
+    cruD(path, headers)
   }
-  def cruD(path: Path, options: Option[Pairs]): Response
+  def cruD(path: Path, headers: Option[Pairs]): Response
 
   //// path components
 

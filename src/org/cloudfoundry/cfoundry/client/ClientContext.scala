@@ -10,6 +10,8 @@ import scala.beans._
 
 trait ClientContext {
 
+  import ClientContext._
+
   //// inflector
 
   @BeanProperty
@@ -21,10 +23,7 @@ trait ClientContext {
   protected var token: Token = null
 
   protected def clearToken = setToken(UNAUTHENTICATED)
-
-  private val UNAUTHENTICATED = new Token {
-    override def auth_header = throw new NotAuthenticated
-  }
+  def authenticated = token != null && token != UNAUTHENTICATED
 
   //// crud
 
@@ -40,5 +39,13 @@ trait ClientContext {
 
   @BeanProperty
   protected var logger: Logger = null
+
+}
+
+object ClientContext {
+
+  val UNAUTHENTICATED = new Token {
+    override def auth_header = throw new NotAuthenticated
+  }
 
 }

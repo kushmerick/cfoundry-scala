@@ -14,28 +14,28 @@ import org.apache.http.entity._
 
 class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_endpoint, _logger) {
 
-  override def Crud(path: Path, options: Option[Pairs], payload: Option[Payload]): Response = {
-    execute(classOf[HttpPost], path, options, payload)
+  override def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
+    execute(classOf[HttpPost], path, headers, payload)
   }
 
-  override def cRud(path: Path, options: Option[Pairs]): Response = {
-    execute(classOf[HttpGet], path, options)
+  override def cRud(path: Path, headers: Option[Pairs]): Response = {
+    execute(classOf[HttpGet], path, headers)
   }
 
-  override def crUd(path: Path, options: Option[Pairs], payload: Option[Payload]): Response = {
-    execute(classOf[HttpPut], path, options, payload)
+  override def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
+    execute(classOf[HttpPut], path, headers, payload)
   }
 
-  override def cruD(path: Path, options: Option[Pairs]): Response = {
-    execute(classOf[HttpDelete], path, options)
+  override def cruD(path: Path, headers: Option[Pairs]): Response = {
+    execute(classOf[HttpDelete], path, headers)
   }
 
   ////////////////////
 
   val excerptLength = 4096
 
-  private def execute[T <: HttpRequestBase](classs: Class[T], path: Path, options: Option[Pairs]) = {
-    val request = makeRequest(classs, path, options)
+  private def execute[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]) = {
+    val request = makeRequest(classs, path, headers)
     trace(request)
     var rawResponse: HttpResponse = null
     try {
@@ -48,46 +48,46 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     Response(response)
   }
 
-  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, options: Option[Pairs], payload: Option[Payload]) = {
-    val request = makeRequest(classs, path, options, payload)
+  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[Chalice]) = {
+    val request = makeRequest(classs, path, headers, payload)
     trace(request)
     val response = new ExcerptableHttpResponse(httpClient.execute(request), excerptLength)
     trace(response)
     Response(response)
   }
 
-  private def makeRequest[T <: HttpRequestBase](classs: Class[T], path: Path, options: Option[Pairs]): HttpUriRequest = {
+  private def makeRequest[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]): HttpUriRequest = {
     val request = classs.newInstance
     request.setURI(new URI(endpoint + makePath(path)))
-    addOptions(request, options)
+    addHeaders(request, headers)
     request
   }
 
-  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, options: Option[Pairs], payload: Option[Payload]): HttpUriRequest = {
-    val request = makeRequest(classs, path, options).asInstanceOf[T]
-    setPayload(request, payload)
+  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[Chalice]): HttpUriRequest = {
+    val request = makeRequest(classs, path, headers).asInstanceOf[T]
+    setChalice(request, payload)
     request
   }
 
   /////////////////////
 
-  private def addOptions(request: HttpRequest, options: Option[Pairs]): Unit = {
+  private def addHeaders(request: HttpRequest, headers: Option[Pairs]): Unit = {
     var opts =
       HttpCRUD.STANDARD_HEADERS ++
-        (options match {
+        (headers match {
           case Some(x) => x
           case None => Pairs()
         })
-    addOptions(request, opts)
+    addHeaders(request, opts)
   }
 
-  private def addOptions(request: HttpRequest, options: Pairs) = {
-    for ((key, value) <- options) {
+  private def addHeaders(request: HttpRequest, headers: Pairs) = {
+    for ((key, value) <- headers) {
       request.addHeader(key, value)
     }
   }
 
-  private def setPayload(request: HttpEntityEnclosingRequest, payload: Option[Payload]) = {
+  private def setChalice(request: HttpEntityEnclosingRequest, payload: Option[Chalice]) = {
     payload match {
       case Some(payload) => request.setEntity(new StringEntity(payload.string))
       case None =>
@@ -135,7 +135,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
 
 object HttpCRUD {
 
-  def factory(base: String, logger: Logger = null) = new HttpCRUD(base, logger)
+  def factory(endpoint: String, logger: Logger) = new HttpCRUD(endpoint, logger)
 
   val FORM_ENCODED = "application/x-www-form-urlencoded"
 

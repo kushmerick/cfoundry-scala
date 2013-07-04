@@ -7,9 +7,12 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
+import java.util.concurrent.Future
 
 abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
   extends ClientResource {
+
+  import AbstractClient._
 
   //// client context
 
@@ -25,17 +28,17 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   property("target", default = Some(target), readOnly = true)
   property("cfoundry_scala_version", default = Some(Version.version), readOnly = true)
-  property("cloudfoundry_version", typ = "int", default = Some(cloudfoundryVersion), readOnly = true)
+  property("cloudfoundry_version", typ = "int", default = lazyCloudfoundryVersion, readOnly = true)
+  property("name", default = Some(name))
+  property("description", default = Some(description))
 
   property("id", applicable = false) // TODO: Resource assumes everything has an id?!
-  property("name", applicable = false)
-  property("description", applicable = false)
   property("url", applicable = false)
 
   //// every resource is a child of the client.  rather than register them all ahead
   //// of time, we do so on demand as they are requested.
 
-  private val R = classOf[Resource]
+  private lazy val R = classOf[Resource]
   private lazy val CR = classOf[ClientResource]
 
   override def hasChildren(childrenName: String): Boolean = {
@@ -69,9 +72,15 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   //// info
 
-  protected lazy val info = perform(() => getCrud.cRud("/info")())
+  protected def info = perform(() => getCrud.cRud("/info")())
 
-  protected lazy val cloudfoundryVersion = info("version").int
+  protected def cloudfoundryVersion = info("version").int
+
+  protected def lazyCloudfoundryVersion = {
+    Some(
+      (() => cloudfoundryVersion).asInstanceOf[LazyDefault] // [!!&&**&&!!]
+      )
+  }
 
   //// auth clients
 
@@ -86,5 +95,12 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// just for debugging
 
   override protected def toStringDecoration = ""
+
+}
+
+object AbstractClient {
+
+  val name = "cfoundry-scala"
+  val description = "A Scala client for Cloud Foundry"
 
 }

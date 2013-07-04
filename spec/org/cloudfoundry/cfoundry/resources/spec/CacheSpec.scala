@@ -40,7 +40,7 @@ class CacheSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
       val resources = ListBuffer[Resource]()
       for (i <- 0 until capacity + 1) {
         val resource = new MockResource
-        resource.id = s"abcd_${i}"
+        resource.setData("id", s"abcd_${i}", sudo = true)
         resources += resource
         cache.touch(resource)
       }
@@ -49,8 +49,6 @@ class CacheSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
         cache.contains(resource) should equal(!first)
         first = false
       }
-    } catch {
-      case x: Exception => Console.println(x)
     }
   }
 

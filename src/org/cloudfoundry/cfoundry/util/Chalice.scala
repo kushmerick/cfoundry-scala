@@ -7,16 +7,23 @@ import org.cloudfoundry.cfoundry.exceptions._
 import java.io._
 
 /*
- * Payload is a wrapper around a 'JSON-style' object: a string, number,
- * array of Payloads, or map from a string to a Payload.  For example:
- *   val j = "{\"A\": [10,20,{\"B\":\"C\"}}"
- *   val p = new Payload(JSON.deserialize(new StringInputStream(j)))
- *   val c = p("A")(2)("B").string // "C"
- *   
- *   TODO: Eliminate most of this by wrapping some JSON library?
+ * Chalice is a _m_a_g_i_c_a_l_ container/wrapper around a 'JSON-style'
+ * object: a string, number, array of Chalices, or map from strings to
+ * Chalices. For example:
+ *   val j = "{\"X\": [10,20,{\"Y\":\"Z\"}}"
+ *   val c = new Chalice(JSON.deserialize(new StringInputStream(j)))
+ *   c("X")(2)("Y").string // "Z"
  */
 
-class Payload(val obj: Any) {
+class Chalice(val _obj: Any) {
+
+  private lazy val obj: Any =
+    if (_obj.isInstanceOf[Chalice]) {
+      // for convenience, we allow Chalice's to trivially contain other Chalices
+      _obj.asInstanceOf[Chalice].obj
+    } else {
+      _obj
+    }
 
   //// map
 
@@ -27,14 +34,14 @@ class Payload(val obj: Any) {
   private lazy val _map = asA[M]
 
   lazy val map = try {
-    _map.map(pair => (pair._1, new Payload(pair._2)))
+    _map.map(pair => (pair._1, new Chalice(pair._2)))
   } catch {
     case x: ClassCastException => unexpectedType(obj, x) // See [**//**]
   }
 
   def apply(k: String) = {
     try {
-      Payload(_map(k))
+      Chalice(_map(k))
     } catch {
       case x: NoSuchElementException => throw new MissingIndex(k, obj, x)
       case x: ClassCastException => unexpectedType(obj, x) // See [++//++]
@@ -50,14 +57,14 @@ class Payload(val obj: Any) {
   private lazy val _seq = asA[S]
 
   lazy val seq = try {
-    _seq.map(x => new Payload(x))
+    _seq.map(x => new Chalice(x))
   } catch {
     case x: ClassCastException => unexpectedType(obj, x) // See [**//**]
   }
 
   def apply(i: Int) = {
     try {
-      Payload(_seq(i))
+      Chalice(_seq(i))
     } catch {
       case x: NoSuchElementException => throw new MissingIndex(i.toString, obj, x)
       case x: ClassCastException => unexpectedType(obj, x) // See [++//++]
@@ -111,7 +118,7 @@ class Payload(val obj: Any) {
 
   lazy val isInt = isDouble
 
-  lazy val int: java.lang.Integer = double.toInt
+  lazy val int: Int = double.toInt
 
   lazy val isTrueInt = isInt && double == int
 
@@ -123,13 +130,17 @@ class Payload(val obj: Any) {
       case n: Number => n != 0
       case s: String => TRUEs.exists(t => s.equalsIgnoreCase(t))
       case _ => false
-      // TODO: What about java.lang.Boolean, java.lang.Boolean.TYPE and many many more?
+      // TODO: What about java.lang.Boolean, java.lang.Boolean.TYPE, etc?
     })
   }
 
   lazy val isNull = obj == null
 
-  //// explicit casting
+  //// raw underlying object (are you sure you want to call this :-)
+
+  lazy val raw = obj
+
+  //// explicit checking/casting
 
   private def asA[T] = try {
     obj.asInstanceOf[T]
@@ -163,8 +174,8 @@ class Payload(val obj: Any) {
 
 }
 
-object Payload {
+object Chalice {
 
-  def apply(x: Any) = new Payload(x)
+  def apply(x: Any) = new Chalice(x)
 
 }

@@ -20,8 +20,8 @@ class Factory(noun: String, context: ClientContext) extends ClassNameUtilities {
     resourceClass.getConstructors()(0).newInstance(context).asInstanceOf[Resource]
   }
 
-  def create(payload: Payload): Resource = {
-    val id = payload("metadata")("guid").string
+  def create(info: Chalice): Resource = {
+    val id = info("metadata")("guid").string
     val cache = context.getCache
     val resource: Resource =
       if (cache.contains(id)) {
@@ -30,7 +30,7 @@ class Factory(noun: String, context: ClientContext) extends ClassNameUtilities {
       } else {
         create
       }
-    resource.fromPayload(payload)
+    resource.fromInfo(info)
     resource
   }
 

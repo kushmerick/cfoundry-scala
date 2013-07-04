@@ -5,36 +5,36 @@ import java.io._
 
 object JSON {
 
-  def serialize(payload: Payload): String = {
+  def serialize(chalice: Chalice): String = {
     val json = new StringBuilder
-    serialize(payload, json)
+    serialize(chalice, json)
     json.result
   }
 
-  private def serialize(payload: Payload, json: StringBuilder): Unit = {
-    if (payload.isNull) {
+  private def serialize[E, T, U](chalice: Chalice, json: StringBuilder): Unit = {
+    if (chalice.isNull) {
       json ++= "null"
-    } else if (payload.isMap) {
+    } else if (chalice.isMap) {
       json ++= "{"
       var first = true
-      for ((key, value) <- payload.map) {
+      for ((key, value) <- chalice.map) {
         if (first) first = false else json ++= ", "
         json ++= "\"" + qescape(key) + "\": "
         serialize(value, json)
       }
       json ++= "}"
-    } else if (payload.isSeq) {
+    } else if (chalice.isSeq) {
       json ++= "["
       var first = true
-      for (value <- payload.seq) {
+      for (value <- chalice.seq) {
         if (first) first = false else json ++= ", "
         serialize(value, json)
       }
       json ++= "]"
-    } else if (payload.isString) {
-      json ++= "\"" + qescape(payload.string) + '"'
+    } else if (chalice.isString) {
+      json ++= "\"" + qescape(chalice.string) + '"'
     } else {
-      json ++= payload.obj.toString
+      json ++= chalice.raw.toString
     }
   }
 
