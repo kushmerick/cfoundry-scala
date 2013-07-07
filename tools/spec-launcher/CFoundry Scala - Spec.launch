@@ -10,9 +10,9 @@
 <listEntry value="4"/>
 </listAttribute>
 <mapAttribute key="org.eclipse.debug.core.environmentVariables">
-<mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures"/>
+<mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures/crud"/>
 <mapEntry key="CFPASSWORD" value="${cfpassword}"/>
-<mapEntry key="CFTARGET" value="${cftarget}"/>
+<mapEntry key="CFTARGET" value="https://api.run.pivotal.io"/>
 <mapEntry key="CFTESTMODE" value="learn"/>
 <mapEntry key="CFUSERNAME" value="${cfusername}"/>
 </mapAttribute>

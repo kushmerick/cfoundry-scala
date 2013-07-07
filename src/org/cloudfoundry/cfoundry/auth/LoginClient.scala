@@ -7,15 +7,15 @@ import java.util.logging._
 
 class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoint: String, logger: Logger) {
 
-  private val crud = crudFactory(endpoint, logger)
+  val crud = crudFactory(endpoint, logger)
 
   def login(username: String, password: String) = {
     val content = Pairs(
       "grant_type" -> "password",
       "username" -> username,
       "password" -> password)
-    val payload = Some(new Chalice(content.formEncode))
-    val response = crud.Crud("/oauth/token")(LOGIN_OPTIONS)(payload)
+    val payload = content.formEncode
+    val response = crud.Crud("/oauth/token")(LOGIN_OPTIONS)(Some(payload))
     if (response.ok) {
       new Token(response.payload)
     } else {

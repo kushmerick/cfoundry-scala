@@ -28,8 +28,7 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
 
   import MockCRUD._
 
-  val fixtures = new Fixtures(Config.cfFixtures, Config.cfTarget, logger)
-  type Responses = fixtures.Fixture
+  val fixtures = new Fixtures(Config.cfFixtures, endpoint, logger)
 
   var mode = TEST
   def testing = mode == TEST
@@ -38,11 +37,13 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
 
   var teacher: HttpCRUD = null
 
-  override def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = C_rud(path, headers, payload)
-  private def C_rud(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = {
+  var sanitizer = new Sanitizer
+
+  override def Crud(path: Path, headers: Option[Pairs], payload: Option[String]) = C_rud(path, headers, payload)
+  private def C_rud(path: Path, headers: Option[Pairs], payload: Option[String]) = {
     doit(
       { fixtures.Crud.getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
-      makePayloadString(payload),
+      payload.get,
       { teacher.Crud(path, headers, payload) })
   }
 
@@ -54,11 +55,11 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
       { teacher.cRud(path, headers) })
   }
 
-  override def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = crU_d(path, headers, payload)
-  private def crU_d(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = {
+  override def crUd(path: Path, headers: Option[Pairs], payload: Option[String]) = crU_d(path, headers, payload)
+  private def crU_d(path: Path, headers: Option[Pairs], payload: Option[String]) = {
     doit(
       { fixtures.crUd.getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
-      makePayloadString(payload),
+      payload.get,
       { teacher.crUd(path, headers, payload) })
   }
 
@@ -71,12 +72,12 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
   }
 
   def makePathString(path: Path) = {
-    makePath(path)
+    sanitizer.sanitize(makePath(path))
   }
 
   def makeHeadersString(headers: Option[Pairs]) = {
     headers match {
-      case Some(pairs) => pairs.formEncode
+      case Some(pairs) => sanitizer.sanitize(pairs.formEncode)
       case None => NONE
     }
   }
@@ -95,25 +96,25 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
    * case from org.cloudfoundry.cfoundry.http.mock.MockCRUD$$anonfun$crUd$1.
    * Such classes will overwrite one another on case-insensitive filesystems. */
 
-  private def doit(getCannedResponses: => Responses, arg: String, askTeacher: => Response) = {
+  private def doit(getFixture: => Fixture, arg: String, askTeacher: => Response) = {
     if ((observing || learning) && teacher == null) {
       throw new RuntimeException("Learning or observing without a teacher")
     }
     if (observing) {
       askTeacher
     } else {
-      var responses: Responses = null
+      var fixture = getFixture
+      val sanitizedArg = sanitizer.sanitize(arg)
       try {
-        responses = getCannedResponses
-        Response.unpack(responses.getChalice(arg))
+        Response.unpack(fixture.getChalice(sanitizedArg))
       } catch {
         case x: Exception => {
           if (testing) {
-            throw x
+            throw new RuntimeException("No fixture for sanitized argument ${sanitizedArg}", x)
           } else {
             val lesson = askTeacher
-            logger.info(s"Recording fixture response ${lesson} for ${arg} due to ${x}")
-            if (learning) responses.setChalice(arg, lesson.pack)
+            logger.info(s"Recording fixture response ${lesson} for sanitized argument ${sanitizedArg} due to ${x}")
+            if (learning) fixture.setChalice(sanitizedArg, lesson.pack)
             lesson
           }
         }

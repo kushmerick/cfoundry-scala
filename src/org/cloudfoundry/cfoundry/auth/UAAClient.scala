@@ -7,7 +7,7 @@ import java.util.logging._
 
 class UAAClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoint: String, logger: Logger = null, clientId: String = UAAClient.DEFAULT_CLIENT_ID) {
 
-  private val crud = crudFactory(endpoint, logger)
+  val crud = crudFactory(endpoint, logger)
 
 }
 

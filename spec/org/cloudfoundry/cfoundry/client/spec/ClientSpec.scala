@@ -10,16 +10,19 @@ import org.cloudfoundry.cfoundry.http.mock._
 import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
+import java.io.ByteArrayOutputStream
+import java.io.PrintWriter
 
 class ClientSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
   val logger = Logger.getGlobal
   logger.setLevel(Level.FINEST)
 
-  var client: MockClient = null
+  var client: MockedClient = null
 
   before {
-    client = new MockClient(logger)
+    client = new MockedClient(logger)
+    client.startup
   }
 
   after {
@@ -56,7 +59,6 @@ class ClientSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   }
 
   it should "support login" in {
-    pending
     client.login(Config.cfUsername, Config.cfPassword)
     client.authenticated should be(true)
   }

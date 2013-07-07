@@ -85,11 +85,11 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// auth clients
 
   private val UAA_ENDPOINT = "token_endpoint"
-  lazy private val uaaClient: UAAClient[TCRUD] =
+  lazy val uaaClient: UAAClient[TCRUD] =
     new UAAClient[TCRUD](crudFactory, discoverEndpoint(UAA_ENDPOINT), logger)
 
   private val LOGIN_ENDPOINT = "authorization_endpoint"
-  lazy private val loginClient: LoginClient[TCRUD] =
+  lazy val loginClient: LoginClient[TCRUD] =
     new LoginClient[TCRUD](crudFactory, discoverEndpoint(LOGIN_ENDPOINT), logger)
 
   //// just for debugging

@@ -24,9 +24,10 @@ class Response(code: Option[Int] = None, _payload: Option[Chalice] = None) {
   }
 
   override def toString = {
-    val c = code match { case Some(c) => c; case None => "-" }
     val s = if (ok) "ok" else "error"
-    s"<Response $c ($s): ${payload.toString}>"
+    val c = code match { case Some(c) => c.toString; case None => "no code" }
+    val p = if (hasPayload) payload.toString else "no payload"
+    s"<Response $c ($s): ${p}>"
   }
 
   // dual of 'unpack'

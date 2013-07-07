@@ -500,7 +500,7 @@ class Resource(@BeanProperty var context: ClientContext)
         content.put(parent_guid_key(parentName), parentGuid)
       }
     }
-    val payload = Chalice(JSON.serialize(Chalice(content)))
+    val payload = JSON.serialize(Chalice(content))
     performAndReload(() => crud.Crud(absolutePath)(options)(Some(payload)))
   }
 
@@ -511,8 +511,9 @@ class Resource(@BeanProperty var context: ClientContext)
   private def update = {
     val metadata = Map(id -> _getId)
     val entity = null // TODO
-    val payload = Map("metadata" -> metadata, "entity" -> entity)
-    performAndReload(() => crud.crUd(getUrl)(options)(Some(Chalice(payload))))
+    var content = Map("metadata" -> metadata, "entity" -> entity)
+    val payload = JSON.serialize(Chalice(content))
+    performAndReload(() => crud.crUd(getUrl)(options)(Some(payload)))
   }
 
   private def delete = {
@@ -535,10 +536,13 @@ class Resource(@BeanProperty var context: ClientContext)
 
   protected def perform(performer: () => Response) = {
     val response = performer()
-    if (response.ok) {
+    if (!response.ok) {
+      throw new BadResponse(response)
+    }
+    if (response.hasPayload) {
       response.payload
     } else {
-      throw new BadResponse(response)
+      null
     }
   }
 
