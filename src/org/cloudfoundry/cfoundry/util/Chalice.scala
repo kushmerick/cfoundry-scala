@@ -24,6 +24,13 @@ class Chalice(val _obj: Any) {
     } else {
       _obj
     }
+  
+  override def equals(x: Any) = try {
+    val c = x.asInstanceOf[Chalice]
+    obj.equals(c.obj)
+  } catch {
+    case x: Exception => false
+  }
 
   //// map
 

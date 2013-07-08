@@ -8,7 +8,7 @@ import scala.collection.mutable._
 
 class CacheSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
-  class MockResource extends Resource(null)
+  class SimpleMockResource extends Resource(null)
 
   var cache: Cache = null
   val capacity = 5
@@ -21,14 +21,14 @@ class CacheSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   }
 
   "Cache" should "support remember" in {
-    val resource = new MockResource
+    val resource = new SimpleMockResource
     resource.setData("id", "abcd", sudo = true)
     cache.touch(resource)
     cache.contains(resource) should equal(true)
   }
 
   it should "support forget" in {
-    val resource = new MockResource
+    val resource = new SimpleMockResource
     resource.setData("id", "abcd", sudo = true)
     cache.touch(resource)
     cache.eject(resource)
@@ -39,7 +39,7 @@ class CacheSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     try {
       val resources = ListBuffer[Resource]()
       for (i <- 0 until capacity + 1) {
-        val resource = new MockResource
+        val resource = new SimpleMockResource
         resource.setData("id", s"abcd_${i}", sudo = true)
         resources += resource
         cache.touch(resource)

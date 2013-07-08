@@ -75,8 +75,8 @@ class Resource(@BeanProperty var context: ClientContext)
     }
   }
 
-  private def hasProperty(name: String) = properties.contains(name)
-  private def hasProperty(property: Property): Boolean = hasProperty(property.name)
+  def hasProperty(name: String) = properties.contains(name)
+  def hasProperty(property: Property): Boolean = hasProperty(property.name)
 
   private def propertyForSource(source: String) = {
     properties.values.find(property => source == property.source)
@@ -435,9 +435,7 @@ class Resource(@BeanProperty var context: ClientContext)
   //// property helpers
 
   private def getUrl = {
-    if (hasData(url)) {
-      getData[String](url)
-    } else if (hasId) {
+    if (hasId && !hasData(url)) {
       if (data.size == 1) {
         // if we just have the id, then we'll assume we're lazily
         // fetching a parent -- ie, this is not a problem
@@ -447,7 +445,9 @@ class Resource(@BeanProperty var context: ClientContext)
       }
       s"${absolutePath(inflector.pluralize(inflector.camelToUnderline(getBriefClassName)))}/${_getId}"
     } else {
-      getData[String](url) // force exception
+      // this will throw an exception if we don't have
+      // a URL -- which is the right thing to do 
+      getData[String](url)
     }
   }
 
@@ -476,6 +476,8 @@ class Resource(@BeanProperty var context: ClientContext)
   }
 
   ///// CRUD operations
+  
+  import CRUD._
 
   private def create = {
     val content = Map[String, Any]()

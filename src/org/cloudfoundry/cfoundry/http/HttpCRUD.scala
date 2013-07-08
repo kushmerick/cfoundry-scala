@@ -13,6 +13,8 @@ import org.apache.http.client.methods._
 import org.apache.http.entity._
 
 class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_endpoint, _logger) {
+  
+  import CRUD._
 
   override def Crud(path: Path, headers: Option[Pairs], payload: Option[String]): Response = {
     execute(classOf[HttpPost], path, headers, payload)

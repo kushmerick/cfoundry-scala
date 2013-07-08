@@ -5,6 +5,8 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
 
 abstract class CRUD(var endpoint: String, val logger: Logger = null) {
+  
+  import CRUD._
 
   //// the four operations
 
@@ -30,18 +32,21 @@ abstract class CRUD(var endpoint: String, val logger: Logger = null) {
 
   //// path components
 
-  type PathComponent = Either[String, Iterable[String]]
-  type Path = Iterable[PathComponent]
-
   def makePath(path: Path) = {
     path
       .map(component => component match { case Left(s) => s; case Right(sseq) => sseq.mkString("/") })
-      .mkString("/")
-  }
+      .mkString("/")  }
 
   //// endpoint
 
   if (endpoint == null) throw new NoEndpoint
-  if (endpoint.last == '/') endpoint = endpoint.substring(0, endpoint.length)
+  if (endpoint.last == '/') endpoint = endpoint.substring(0, endpoint.length-1)
+
+}
+
+object CRUD {
+  
+  type PathComponent = Either[String, Iterable[String]]
+  type Path = Iterable[PathComponent]
 
 }

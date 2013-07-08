@@ -26,6 +26,7 @@ import java.util.logging._
 
 class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logger) {
 
+  import CRUD._
   import MockCRUD._
 
   val fixtures = new Fixtures(Config.cfFixtures, endpoint, logger)

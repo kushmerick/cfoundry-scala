@@ -6,7 +6,7 @@ import org.cloudfoundry.cfoundry.exceptions._
 import org.cloudfoundry.cfoundry.http.util._
 import scala.collection.mutable._
 
-class Response(code: Option[Int] = None, _payload: Option[Chalice] = None) {
+class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
 
   import Response._
 
@@ -36,6 +36,13 @@ class Response(code: Option[Int] = None, _payload: Option[Chalice] = None) {
     if (hasCode) packed += CODE -> code.get
     if (hasPayload) packed += PAYLOAD -> payload
     Chalice(packed)
+  }
+  
+  override def equals(x: Any) = try {
+    val r = x.asInstanceOf[Response]
+    code == r.code && payload==r.payload
+  } catch {
+    case x: Exception => false
   }
 
 }
