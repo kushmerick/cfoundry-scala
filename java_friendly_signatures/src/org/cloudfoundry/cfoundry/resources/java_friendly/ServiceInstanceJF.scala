@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-06-06 20:05:31.306 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-07-12 14:56:26.949 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.resources.java_friendly
 import scala.collection.JavaConversions._
 trait ServiceInstanceJF {

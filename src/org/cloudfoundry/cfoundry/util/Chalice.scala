@@ -125,7 +125,7 @@ class Chalice(val _obj: Any) {
 
   lazy val isInt = isDouble
 
-  lazy val int: Int = double.toInt
+  lazy val int = double.toInt
 
   lazy val isTrueInt = isInt && double == int
 

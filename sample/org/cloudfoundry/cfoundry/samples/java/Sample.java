@@ -14,6 +14,8 @@ class Sample {
 
 		Client client = new Client(target, logger());
 
+		System.out.println("CF version: " + client.getCloudfoundry_version() + "; client version: " + client.getCfoundry_scala_version());
+
 		client.login(username, password);
 
 		for (Organization org : client.getOrganizations()) {
@@ -41,7 +43,10 @@ class Sample {
 		serviceInstance.save();
 		serviceInstance.destroy();
 
-		client.logout();
+		space.setName("foobar");
+		space.save();
+
+	    client.logout();
 	}
 
 	static private Logger logger() {

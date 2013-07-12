@@ -8,5 +8,7 @@ class Space(client: ClientContext) extends Resource(client) with SpaceJF {
   hasA("organization")
   hasMany("serviceInstance")
   hasMany("apps")
+  
+  property("description", applicable = false)
 
 }

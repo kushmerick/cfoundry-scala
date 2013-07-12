@@ -4,7 +4,7 @@ import org.scalatest._
 import org.scalatest.matchers._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.resources._
-import org.cloudfoundry.cfoundry.resources.mock.MockResource
+import org.cloudfoundry.cfoundry.resources.samples._
 
 class ChaliceSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
@@ -72,7 +72,7 @@ class ChaliceSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   }
 
   it should "support resource" in {
-    val resource = new MockResource
+    val resource = new SampleResource
     val chalice = Chalice(resource)
     chalice.isResource should equal(true)
     chalice.resource should equal(resource)

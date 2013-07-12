@@ -36,12 +36,12 @@ class Resource(@BeanProperty var context: ClientContext)
   //// state
 
   private val properties = Map[String, Property]()
-  private val data: Map[String, Chalice] = Map[String, Chalice]()
+  private val data = Map[String, Chalice]()
 
   private val children = Set[String]()
   private val parents = Map[String, Class[_]]()
 
-  private var isDirty: Boolean = false
+  private var dirty = Set[Property]()
 
   // just for java_friendly/Generate 
   def getProperties = properties
@@ -50,7 +50,7 @@ class Resource(@BeanProperty var context: ClientContext)
   //// most resources have these properties, though subclasses might
   //// declare the property again, for example to override 'source'
 
-  property(id, source = "guid", default = Some(NO_ID), readOnly = true)
+  property(id, source = "guid", default = Some(NO_ID), readOnly = true, metadata = true)
   property("name")
   property("description")
   property(url, readOnly = true)
@@ -65,9 +65,10 @@ class Resource(@BeanProperty var context: ClientContext)
     default: Option[Any] = None,
     applicable: Boolean = true,
     readOnly: Boolean = false,
-    parental: Boolean = false) = {
+    parental: Boolean = false,
+    metadata: Boolean = false) = {
     if (applicable) {
-      val property = new Property(name, typ, source, default, readOnly, parental)
+      val property = new Property(name, typ, source, default, readOnly, parental, metadata)
       properties += name -> property
     } else {
       // TODO: Flesh out the Resource hierarchy to avoid this ugliness
@@ -154,7 +155,6 @@ class Resource(@BeanProperty var context: ClientContext)
   def fromInfo(info: Chalice): Unit = {
     fromInfo(info, Seq("metadata", "entity"))
     cache.touch(this)
-    isDirty = false
   }
 
   private def fromInfo(info: Chalice, keys: Seq[String]) = {
@@ -202,6 +202,7 @@ class Resource(@BeanProperty var context: ClientContext)
   protected def setData(property: Property, value: Chalice, sudo: Boolean): Unit = {
     if (!sudo && property.readOnly) throw new ReadOnly(property, value, this)
     data.put(property.name, value)
+    dirty += property
   }
 
   protected def setData(property: Property, value: Any): Unit = setData(property, value, false)
@@ -327,7 +328,7 @@ class Resource(@BeanProperty var context: ClientContext)
     }
   }
 
-  def updateDynamic(noun: String)(value: Any) = {
+  def updateDynamic(noun: String)(value: Any): Unit = {
     if (hasParent(noun)) {
       var parent: Resource = null
       if (value.isInstanceOf[Resource]) {
@@ -354,7 +355,6 @@ class Resource(@BeanProperty var context: ClientContext)
     } else {
       throw new InvalidProperty(noun, this)
     }
-    isDirty = true
   }
 
   private def propogateIdToChildren(oldId: String) = {
@@ -397,7 +397,7 @@ class Resource(@BeanProperty var context: ClientContext)
     if (isLocalOnly) {
       create
     } else {
-      if (isDirty) update
+      if (dirty.nonEmpty) update
     }
     cache.touch(this)
   }
@@ -511,11 +511,12 @@ class Resource(@BeanProperty var context: ClientContext)
   }
 
   private def update = {
-    val metadata = Map(id -> _getId)
-    val entity = null // TODO
-    var content = Map("metadata" -> metadata, "entity" -> entity)
-    val payload = JSON.serialize(Chalice(content))
-    performAndReload(() => crud.crUd(getUrl)(options)(Some(payload)))
+    val payload =
+      dirty
+      .filter(property => property.entity && !property.parental && !property.readOnly)
+      .map(property => property.getTrueSource -> getData(property))
+      .toMap
+    performAndReload(() => crud.crUd(getUrl)(options)(Some(JSON.serialize(Chalice(payload)))))
   }
 
   private def delete = {
@@ -534,6 +535,7 @@ class Resource(@BeanProperty var context: ClientContext)
     // fromInfo(perform(performer)("resources").seq.first)
     // OTOH, it is working fine now for Crud and cRud??!!
     fromInfo(perform(performer))
+    dirty.clear
   }
 
   protected def perform(performer: () => Response) = {
@@ -579,7 +581,7 @@ class Resource(@BeanProperty var context: ClientContext)
 
   protected def toStringDecoration = {
     val s = new StringBuilder
-    if (isDirty) s ++= "D"
+    if (dirty.nonEmpty) s ++= "D"
     if (isLocalOnly) s ++= "L"
     s.result
   }

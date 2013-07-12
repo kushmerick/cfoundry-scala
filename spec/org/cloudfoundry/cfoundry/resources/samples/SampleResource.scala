@@ -1,11 +1,11 @@
-package org.cloudfoundry.cfoundry.resources.mock
+package org.cloudfoundry.cfoundry.resources.samples
 
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.util._
 import java.util.logging._
 
-class MockResource extends Resource(null) {
+class SampleResource extends Resource(null) {
   
   setContext(new ClientContext {
     override def getLogger = Logger.getGlobal    
@@ -16,5 +16,7 @@ class MockResource extends Resource(null) {
   property("default", default = Some("foo"))
   property("lazy_default", default = Some(() => "foo"))
   property("foo_count", typ="int", default = Some(123))
+  property("read_only", default = Some("foo"), readOnly = true)
+  property("description", applicable = false)
 
 }

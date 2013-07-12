@@ -6,9 +6,11 @@ class Property(
   val source: String,
   val default: Option[Any],
   val readOnly: Boolean,
-  val parental: Boolean) {
+  val parental: Boolean,
+  val metadata: Boolean) {
 
-  def hasDefault = default.isDefined
-  def getTrueSource = if (source == null) name else source
+  lazy val hasDefault = default.isDefined
+  lazy val getTrueSource = if (source == null) name else source
+  lazy val entity = !metadata
 
 }

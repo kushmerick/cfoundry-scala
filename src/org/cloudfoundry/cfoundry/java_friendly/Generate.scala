@@ -134,9 +134,15 @@ object Generate extends scala.App with ClassNameUtilities {
   }
 
   def getChaliceTypeName(typ: String) = {
-    classOf[Chalice].getMethod(typ).getReturnType.getName
+    val typeMap = Map[Class[_],Class[_]](
+      classOf[Int] -> classOf[java.lang.Integer],
+      classOf[Double]-> classOf[java.lang.Double] 
+     )
+    var c = classOf[Chalice].getMethod(typ).getReturnType
+    if (typeMap.contains(c)) c = typeMap(c)
+    c.getName
   }
-
+  
   def writeMethods(resourceClass: Class[_], methods: Seq[String]) {
     var packageName = resourceClass.getPackage.getName
     var path = packageName.replace('.', File.separatorChar)

@@ -11,6 +11,8 @@ object Sample extends scala.App {
   val client = new Client(target, logger)
 
   client.login(username, password)
+  
+  Console.println(s"CF version: ${client.cloudfoundry_version.int}; client version = ${client.cfoundry_scala_version.string}")
 
   for (org <- client.organizations) {
     for (space <- org.spaces) {
@@ -35,6 +37,9 @@ object Sample extends scala.App {
   serviceInstance.servicePlan = servicePlan
   serviceInstance.save
   serviceInstance.destroy
+  
+  space.name = "foobar"
+  space.save
 
   client.logout
 
