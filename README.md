@@ -8,7 +8,7 @@ The client is basically
 stable/functional with no known bugs.  But it does not yet support
 several CF resources (e.g. users, routes, domains, quotas, stacks),
 and support for other resources is incomplete (e.g., you can't upload
-an apps bits, or persist changes to existing resources).
+an apps bits).
 
 ## Installation
 
