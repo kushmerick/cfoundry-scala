@@ -8,7 +8,7 @@ The client is basically
 stable/functional with no known bugs.  But it does not yet support
 several CF resources (e.g. users, routes, domains, quotas, stacks),
 and support for other resources is incomplete (e.g., you can't upload
-an apps bits).
+an app's bits).
 
 ## Installation
 
@@ -35,7 +35,7 @@ resembles navigating through a complex local datastructure.
     
 The full [Scala
 sample](https://github.com/kushmerick/cfoundry-scala/tree/master/sample/org/cloudfoundry/cfoundry/samples/scala)
-shows many more details, such as creating new objects.
+shows many more details -- such as creating new resources, and writing local changes to a resource back to CF.
 
 ## Using cfoundry-scala from Java
 
