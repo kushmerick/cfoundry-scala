@@ -14,7 +14,7 @@ class Sample {
 
 		Client client = new Client(target, logger());
 
-		System.out.println("CF version: " + client.getCloudfoundry_version() + "; client version: " + client.getCfoundry_scala_version());
+		System.out.println("CF version: " + client.getCloudfoundryVersion() + "; client version: " + client.getCfoundryScalaVersion());
 
 		client.login(username, password);
 

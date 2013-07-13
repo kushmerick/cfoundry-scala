@@ -122,15 +122,15 @@ object Generate extends scala.App with ClassNameUtilities {
   }
 
   def makeGetter(name: String, returnType: String, actualType: String, deMagicifier: String) = {
-    "def get" + inflector.capitalize(name) + ": " + returnType + " = selectDynamic(\"" + name + "\")." + deMagicifier + ".asInstanceOf[" + actualType + "]"
+    "def get" + inflector.capitalize(inflector.underlineToCamel(name)) + ": " + returnType + " = selectDynamic(\"" + name + "\")." + deMagicifier + ".asInstanceOf[" + actualType + "]"
   }
 
   def makeSetter(name: String, valueType: String) = {
-    "def set" + inflector.capitalize(name) + "(value: " + valueType + "): Unit = updateDynamic(\"" + name + "\")(value)"
+    "def set" + inflector.capitalize(inflector.underlineToCamel(name)) + "(value: " + valueType + "): Unit = updateDynamic(\"" + name + "\")(value)"
   }
 
   def makeCreator(name: String, resourceType: String) = {
-    "def new" + inflector.capitalize(name) + ": " + resourceType + " = selectDynamic(\"" + name + "\").resource.asInstanceOf[" + resourceType + "]"
+    "def new" + inflector.capitalize(inflector.underlineToCamel(name)) + ": " + resourceType + " = selectDynamic(\"" + name + "\").resource.asInstanceOf[" + resourceType + "]"
   }
 
   def getChaliceTypeName(typ: String) = {

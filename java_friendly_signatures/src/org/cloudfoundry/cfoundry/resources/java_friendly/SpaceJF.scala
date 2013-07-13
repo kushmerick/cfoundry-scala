@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-07-12 14:56:28.089 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-07-12 22:56:15.721 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.resources.java_friendly
 import scala.collection.JavaConversions._
 trait SpaceJF {

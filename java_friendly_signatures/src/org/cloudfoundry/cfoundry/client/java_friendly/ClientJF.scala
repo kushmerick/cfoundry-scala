@@ -1,12 +1,12 @@
-// DO NOT EDIT -- Automagically generated at 2013-07-12 14:56:28.849 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-07-12 22:56:16.642 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.client.java_friendly
 import scala.collection.JavaConversions._
 trait ClientJF {
   def selectDynamic(noun: String): org.cloudfoundry.cfoundry.resources.Magic
   def updateDynamic(noun: String)(value: Any): Unit
   def getAppsUrl: java.lang.String = selectDynamic("appsUrl").prop.asInstanceOf[java.lang.String]
-  def getCfoundry_scala_version: java.lang.String = selectDynamic("cfoundry_scala_version").prop.asInstanceOf[java.lang.String]
-  def getCloudfoundry_version: java.lang.Integer = selectDynamic("cloudfoundry_version").prop.asInstanceOf[java.lang.Integer]
+  def getCfoundryScalaVersion: java.lang.String = selectDynamic("cfoundry_scala_version").prop.asInstanceOf[java.lang.String]
+  def getCloudfoundryVersion: java.lang.Integer = selectDynamic("cloudfoundry_version").prop.asInstanceOf[java.lang.Integer]
   def getDescription: java.lang.String = selectDynamic("description").prop.asInstanceOf[java.lang.String]
   def setDescription(value: java.lang.String): Unit = updateDynamic("description")(value)
   def getName: java.lang.String = selectDynamic("name").prop.asInstanceOf[java.lang.String]
