@@ -149,6 +149,14 @@ class Resource(@BeanProperty var context: ClientContext)
   def parent_guid_key_to_parentGuidPropertyName(key: String) = {
     parentGuidPropertyName(inflector.underlineToCamel(key.substring(0, key.length - 5)))
   }
+  
+  //// equality
+  
+  override def equals(x: Any) = try {
+    x.getClass == getClass && x.asInstanceOf[Resource].data.equals(data)
+  } catch {
+    case x: Exception => false
+  }
 
   //// loading from a cRud response
 

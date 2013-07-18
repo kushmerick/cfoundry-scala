@@ -11,7 +11,7 @@ object JSON {
     json.result
   }
 
-  private def serialize[E, T, U](chalice: Chalice, json: StringBuilder): Unit = {
+  private def serialize(chalice: Chalice, json: StringBuilder): Unit = {
     if (chalice.isNull) {
       json ++= "null"
     } else if (chalice.isMap) {
@@ -39,12 +39,12 @@ object JSON {
   }
 
   private def qescape(s: String) = {
-    "\"".r.replaceAllIn(s, "\\\"")
+    "\"".r.replaceAllIn(s, "\\\\\"")
   }
 
-  // TODO: Why did I pick Butter42?
-  def deserialize(json: InputStream) = try {
-    butter4s.json.Parser.parse(new InputStreamReader(json))
+  def deserialize(stream: InputStream) = try {
+    var json = new java.util.Scanner(stream, "UTF-8").useDelimiter("\\A").next
+    scala.util.parsing.json.JSON.parseFull(json).get
   } catch {
     case x: Exception => throw new BadJSON(x)
   }

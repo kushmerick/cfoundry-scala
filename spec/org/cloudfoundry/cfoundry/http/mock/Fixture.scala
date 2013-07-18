@@ -13,17 +13,14 @@ class Fixture extends HashMap[String, Fixture.Node] {
   var dirty = false
 
   def getChalice(key: String) = {
-    ensureLoaded
     get(key).get.right.get
   }
 
   def setChalice(key: String, c: Chalice) = {
-    ensureLoaded
     put(key, Right(c))
   }
 
   def getTree(key: String) = {
-    ensureLoaded
     if (!contains(key)) {
       put(key, Left(new Fixture)) // autovivify missing keys
     }
@@ -49,26 +46,18 @@ class Fixture extends HashMap[String, Fixture.Node] {
     }
   }
 
-  var file: File = null
-
-  def load(f: File) = file = f
-
-  def ensureLoaded = {
-    if (file != null) {
-      if (dirty) throw new RuntimeException("Internal error: Dirty fixture was never loaded")
-      clear
-      if (file.exists) {
-        var s: FileInputStream = null
-        try {
-          val s = new FileInputStream(file)
-          this ++= internalize(JSON.deserialize(s).asInstanceOf[Incoming])
-        } finally {
-          if (s != null) s.close
-        }
+  def load(file: File) = {
+    clear
+    if (file.exists) {
+      var s: FileInputStream = null
+      try {
+        val s = new FileInputStream(file)
+        this ++= internalize(JSON.deserialize(s).asInstanceOf[Incoming])
+      } finally {
+        if (s != null) s.close
       }
-      dirty = false
-      file = null
     }
+    dirty = false
   }
 
   def internalize(incoming: Incoming) = Fixture.internalize(incoming).left.get

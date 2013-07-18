@@ -38,36 +38,47 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
 
   var teacher: HttpCRUD = null
 
-  var sanitizer = new Sanitizer
+  private var sanitizer = new Sanitizer
+  
+  private var testName: String = "UNKNOWN"
+  def beginTest(_testName: String) = testName = _testName
+  
+  private var _time = 0
+  private def tick = _time += 1
+  private def time = _time.toString
 
   override def Crud(path: Path, headers: Option[Pairs], payload: Option[String]) = C_rud(path, headers, payload)
   private def C_rud(path: Path, headers: Option[Pairs], payload: Option[String]) = {
+    tick
     doit(
-      { fixtures.Crud.getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
+      { fixtures.Crud.getTree(testName).getTree(time).getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
       payload.get,
       { teacher.Crud(path, headers, payload) })
   }
 
   override def cRud(path: Path, headers: Option[Pairs]) = cR_ud(path, headers)
   private def cR_ud(path: Path, headers: Option[Pairs]) = {
+    tick
     doit(
-      { fixtures.cRud.getTree(makePathString(path)) },
+      { fixtures.cRud.getTree(testName).getTree(time).getTree(makePathString(path)) },
       makeHeadersString(headers),
       { teacher.cRud(path, headers) })
   }
 
   override def crUd(path: Path, headers: Option[Pairs], payload: Option[String]) = crU_d(path, headers, payload)
   private def crU_d(path: Path, headers: Option[Pairs], payload: Option[String]) = {
+    tick
     doit(
-      { fixtures.crUd.getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
+      { fixtures.crUd.getTree(testName).getTree(time).getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
       payload.get,
       { teacher.crUd(path, headers, payload) })
   }
 
   override def cruD(path: Path, headers: Option[Pairs]) = cruD_(path, headers)
   def cruD_(path: Path, headers: Option[Pairs]) = {
+    tick
     doit(
-      { fixtures.cruD.getTree(makePathString(path)) },
+      { fixtures.cruD.getTree(testName).getTree(time).getTree(makePathString(path)) },
       makeHeadersString(headers),
       { teacher.cruD(path, headers) })
   }
@@ -111,7 +122,7 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
       } catch {
         case x: Exception => {
           if (testing) {
-            throw new RuntimeException("No fixture for sanitized argument ${sanitizedArg}", x)
+            throw new RuntimeException(s"No fixture for sanitized argument ${sanitizedArg}", x)
           } else {
             val lesson = askTeacher
             logger.info(s"Recording fixture response ${lesson} for sanitized argument ${sanitizedArg} due to ${x}")

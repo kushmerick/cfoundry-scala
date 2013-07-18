@@ -18,6 +18,11 @@ class MockedClient(_logger: Logger) extends AbstractClient[MockCRUD](MockCRUD.fa
     dependantStudents.foreach(startup(_))
   }
 
+  def beginTest(testName: String) = {
+    student.beginTest(testName)
+    dependantStudents.foreach(_.beginTest(testName))
+  }
+
   def shutdown: Unit = {
     // today the students can be shut down in any order. but to guard against future
     // changes, let's shut down the dependents first
@@ -43,7 +48,7 @@ class MockedClient(_logger: Logger) extends AbstractClient[MockCRUD](MockCRUD.fa
       s.fixtures.deserialize
     }
   }
-
+  
   private def shutdown(s: MockCRUD) = {
     if (s.learning) {
       s.fixtures.serialize

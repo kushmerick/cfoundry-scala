@@ -12,7 +12,7 @@ class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
 
   def hasPayload = _payload.isDefined
   def hasCode = code.isDefined
-
+  
   def payload = _payload match {
     case Some(x) => x
     case None => throw new NoPayload(this)
