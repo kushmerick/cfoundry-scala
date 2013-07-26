@@ -4,7 +4,7 @@ import org.apache.http.message._
 import org.apache.http.entity._
 import org.apache.http._
 
-class MockHttpResponse(code: Int = 200, bytes: Array[Byte] = Array[Byte](), contentType: String = "application/json")
+class MockHttpResponse(code: Int = 200, bytes: Array[Byte] = Array[Byte](), contentType: String = null)
   extends BasicHttpResponse(MockHttpResponse.statusLine(code)) {
   
   override def getEntity = new ByteArrayEntity(bytes, ContentType.create(contentType))

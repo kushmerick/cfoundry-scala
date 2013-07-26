@@ -18,13 +18,14 @@ class ResponseSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   
   it should "support JSON payloads" in {
     val obj = Seq(1,2,3,4)
-	val response = Response(new MockHttpResponse(bytes = JSON.serialize(Chalice(obj)).getBytes))
+    val bytes = JSON.serialize(Chalice(obj)).getBytes
+	val response = Response(new MockHttpResponse(bytes = bytes, contentType = "application/json"))
     response.payload.raw should equal(obj)
   }
 
   it should "support blob payloads" in {
     val obj = Array[Byte](1,2,3,4)
-    val response = Response(new MockHttpResponse(bytes = obj, contentType = null))
+    val response = Response(new MockHttpResponse(bytes = obj))
     response.payload.blob should equal(obj)
   }
 
