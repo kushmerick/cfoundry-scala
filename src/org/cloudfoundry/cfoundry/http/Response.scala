@@ -33,6 +33,7 @@ class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
 
   // dual of 'unpack'
   def pack = {
+    if (hasPayload && payload.isBlob) throw new NotPackable
     val packed = new HashMap[String, Any]
     if (hasCode) packed += CODE -> code.get
     if (hasPayload) packed += PAYLOAD -> payload
@@ -50,15 +51,15 @@ class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
 
 object Response {
 
-  def apply(r: ExcerptableHttpResponse) = create(r)
+  def apply(r: HttpResponse) = create(r)
 
-  private def create(r: ExcerptableHttpResponse) = {
+  private def create(r: HttpResponse) = {
     val code = r.getStatusLine.getStatusCode
+    val entity = r.getEntity
     val payload =
-      if (r.hasEntity) {
+      if (entity != null) {
         var istream: InputStream = null
         try {
-          val entity = r.getEntity
           val decoder = getDecoder(entity.getContentType.getValue)
           Some(Chalice(decoder(entity)))
         } catch {

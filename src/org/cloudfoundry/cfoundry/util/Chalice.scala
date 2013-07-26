@@ -145,19 +145,19 @@ class Chalice(val _obj: Any) {
   lazy val isNull = obj == null
 
   //// blob
-  
+
   private type B = Array[Byte]
 
   lazy val isBlob = obj.isInstanceOf[B]
 
   lazy val blob = asA[B]
-  
+
   //// raw underlying object (are you sure you want to call this :-)
 
   lazy val raw = obj
 
   //// explicit checking/casting
-  
+
   private def asA[T] = try {
     obj.asInstanceOf[T]
   } catch {
