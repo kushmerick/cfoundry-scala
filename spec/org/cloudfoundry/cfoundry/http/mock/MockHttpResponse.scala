@@ -16,4 +16,3 @@ object MockHttpResponse {
   def statusLine(code: Int) = new BasicStatusLine(new ProtocolVersion("1", 0, 0), code, null)
   
 }
-  

@@ -24,7 +24,7 @@ class ResponseSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
   it should "support blob payloads" in {
     val obj = Array[Byte](1,2,3,4)
-		val response = Response(new MockHttpResponse(bytes = obj, contentType = null))
+    val response = Response(new MockHttpResponse(bytes = obj, contentType = null))
     response.payload.blob should equal(obj)
   }
 
