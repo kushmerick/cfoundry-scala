@@ -5,6 +5,7 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
 import org.cloudfoundry.cfoundry.http.util._
 import scala.collection.mutable._
+import org.apache.http._
 
 class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
 
@@ -57,8 +58,9 @@ object Response {
       if (r.hasEntity) {
         var istream: InputStream = null
         try {
-          istream = r.getEntity.getContent
-          Some(Chalice(JSON.deserialize(istream)))
+          val entity = r.getEntity
+          val decoder = getDecoder(entity.getContentType.getValue)
+          Some(Chalice(decoder(entity)))
         } catch {
           case x: Exception => throw new InvalidResponse(code, x)
         } finally {
@@ -88,7 +90,33 @@ object Response {
     new Response(code, payload)
   }
 
-  val CODE = "code"
-  val PAYLOAD = "payload"
+  private val CODE = "code"
+  private val PAYLOAD = "payload"
+    
+  private def getDecoder(contentType: String) = {
+    val sc = contentType.indexOf(';')
+    var ct = if (sc > 0) contentType.substring(0, sc) else contentType
+	DECODERS.get(ct) match {
+	  case Some(decoder) => decoder
+	  case None => blobDecoder _
+    }
+  }
+    
+  private val DECODERS = Map(
+    "application/json" -> ((entity: HttpEntity) => JSON.deserialize(entity.getContent))
+  )
+  
+  private def blobDecoder(entity: HttpEntity) = {
+	val N = 4096
+    val blob = new ByteArrayOutputStream(N<<2)
+    val buf = Array.fill[Byte](N)(0)
+    val istream = entity.getContent
+    var n = 1
+    while (n > 0) {
+      n = istream.read(buf, 0, buf.size) 
+      if (n > 0) blob.write(buf, 0, n)
+    }
+    blob.toByteArray
+  } 
 
 }

@@ -19,7 +19,7 @@ abstract class Magic extends Dynamic {
 
   def apply(index: Int) = resources(index)
 
-  def prop = this match {
+  private def prop = this match {
     case MagicProp(v) => v
     case _ => throw new PropertyResourceConfusion(PROP, this)
   }
@@ -30,6 +30,7 @@ abstract class Magic extends Dynamic {
   def double = convert(() => prop.asInstanceOf[Double])
   def bool = convert(() => prop.asInstanceOf[Boolean])
   def string = convert(() => prop.asInstanceOf[String])
+  def blob = convert(() => prop.asInstanceOf[Array[Byte]])
 
   private def convert[T](converter: () => T): T = try {
     converter()

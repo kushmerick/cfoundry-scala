@@ -66,9 +66,10 @@ class Resource(@BeanProperty var context: ClientContext)
     applicable: Boolean = true,
     readOnly: Boolean = false,
     parental: Boolean = false,
-    metadata: Boolean = false) = {
+    metadata: Boolean = false,
+    options: scala.collection.Map[String,Any] = Map()) = {
     if (applicable) {
-      val property = new Property(name, typ, source, default, readOnly, parental, metadata)
+      val property = new Property(name, typ, source, default, readOnly, parental, metadata, options)
       properties += name -> property
     } else {
       // TODO: Flesh out the Resource hierarchy to avoid this ugliness
@@ -310,9 +311,18 @@ class Resource(@BeanProperty var context: ClientContext)
         }
         MagicResource(getData(noun))
       } else {
-        // servicePlan.description
-        logger.fine(s"Selecting property '${noun}' of resource ${this}")
-        MagicProp(getData(noun))
+        val property = properties(noun)
+        if (property.typ == "blob") {
+          // app.bits
+          logger.fine(s"Retrieving blob '${noun}' of resource ${this}")
+          val get = property.options.getOrElse("get", property.name)
+          val payload = perform(() => crud.cRud(s"${getUrl}/${get}")(options))
+          MagicProp(payload)
+        } else {
+          // servicePlan.description
+          logger.fine(s"Selecting property '${noun}' of resource ${this}")
+          MagicProp(getData(noun))
+        }
       }
     } else if (hasChildren(inflector.pluralize(noun))) {
       val factory = factoryFor(noun)

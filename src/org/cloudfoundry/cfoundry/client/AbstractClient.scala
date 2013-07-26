@@ -18,7 +18,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   setContext(this)
 
-  setLogger(_logger)
+  setLogger(if (_logger != null) _logger else Logger.getGlobal())
   setInflector(new Inflector)
   setCrud(crudFactory(target, _logger))
   clearToken

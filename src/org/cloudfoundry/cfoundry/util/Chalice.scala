@@ -7,12 +7,13 @@ import org.cloudfoundry.cfoundry.exceptions._
 import java.io._
 
 /*
- * Chalice is a _m_a_g_i_c_a_l_ container/wrapper around a 'JSON-style'
- * object: a string, number, array of Chalices, or map from strings to
- * Chalices. For example:
- *   val j = "{\"X\": [10,20,{\"Y\":\"Z\"}}"
- *   val c = new Chalice(JSON.deserialize(new StringInputStream(j)))
- *   c("X")(2)("Y").string // "Z"
+ * Chalice is a _m_a_g_i_c_a_l_ container/wrapper around either:
+ *  o  a JSON-style object: a string, number, array of Chalices, or map
+ *     from strings to Chalices. For example:
+ *       val j = "{\"X\": [10,20,{\"Y\":\"Z\"}}"
+ *       val c = new Chalice(JSON.deserialize(new StringInputStream(j)))
+ *     c("X")(2)("Y").string // "Z"
+ *  o a 'blob' (byte array)
  */
 
 class Chalice(val _obj: Any) {
@@ -143,12 +144,20 @@ class Chalice(val _obj: Any) {
 
   lazy val isNull = obj == null
 
+  //// blob
+  
+  private type B = Array[Byte]
+
+  lazy val isBlob = obj.isInstanceOf[B]
+
+  lazy val blob = asA[B]
+  
   //// raw underlying object (are you sure you want to call this :-)
 
   lazy val raw = obj
 
   //// explicit checking/casting
-
+  
   private def asA[T] = try {
     obj.asInstanceOf[T]
   } catch {
