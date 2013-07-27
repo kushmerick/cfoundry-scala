@@ -8,7 +8,7 @@ import java.util.logging._
 
 trait MockedClientFixture extends Suite with BeforeAndAfter {
   
-  protected var client: MockedClient = null
+  private var client: MockedClient = null
 
   private val logger = Logger.getGlobal
   logger.setLevel(Level.FINEST)
@@ -33,11 +33,11 @@ trait MockedClientFixture extends Suite with BeforeAndAfter {
     client = null
   }
 
-  type FixtureParam = Null
+  type FixtureParam = MockedClient
 
   override def withFixture(test: OneArgTest) = {
     client.beginTest(test.name)
-    withFixture(test.toNoArgTest(null))
+    withFixture(test.toNoArgTest(client))
   }
   
 }

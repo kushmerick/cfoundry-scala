@@ -20,7 +20,7 @@ trait ClientContext {
   //// token
 
   @BeanProperty
-  protected var token: Token = null
+  var token: Token = null
 
   protected def clearToken = setToken(UNAUTHENTICATED)
   def authenticated = token != null && token != UNAUTHENTICATED
@@ -40,12 +40,19 @@ trait ClientContext {
   @BeanProperty
   protected var logger: Logger = null
 
+  //// authentication
+  
+  type Authenticator = () => Boolean
+
+  @BeanProperty
+  var authenticator: Authenticator = null
+
 }
 
 object ClientContext {
 
   val UNAUTHENTICATED = new Token {
-    override def auth_header = throw new NotAuthenticated
+    override lazy val authHeader = throw new NotAuthenticated
   }
 
 }

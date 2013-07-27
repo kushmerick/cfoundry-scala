@@ -21,8 +21,6 @@
 - reimplement Java friendliness with the Scala macro feature when it
   supports adding new members to a class
 
-- support refresh_token
-
 - Scala consumption of the JF API is weak; for example the following
   does not compile: "for (org <- client.getOrganizations) { ... }".
   The following implicit conversation is inadequate: "implicit def

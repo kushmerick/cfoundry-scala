@@ -68,6 +68,7 @@ object Generate extends scala.App with ClassNameUtilities {
 
   def makeMethods(resource: Resource, property: Property): Seq[String] = {
     val methods = new scala.collection.mutable.ArrayBuilder.ofRef[String]
+    if (property.typ != "blob") { // TODO
     // getter
     val (returnType, actualType, deMagicifier) =
       if (resource.hasParent(property.name) || resource.hasChildren(property.name)) {
@@ -89,6 +90,7 @@ object Generate extends scala.App with ClassNameUtilities {
           getChaliceTypeName(property.typ)
         }
       methods += makeSetter(property.name, valueType)
+    }
     }
     methods.result
   }
@@ -176,7 +178,7 @@ object Generate extends scala.App with ClassNameUtilities {
   }
 
   import org.cloudfoundry.cfoundry.http.mock._
-  class FakeClient extends AbstractClient[MockCRUD](MockCRUD.factory, "foo", null) {
+  class FakeClient extends AbstractClient[MockCRUD](MockCRUD.factory, "foo") {
     override protected lazy val cloudfoundryVersion = 0
   }
 

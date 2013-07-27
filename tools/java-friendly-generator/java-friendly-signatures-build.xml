@@ -2,7 +2,8 @@
 
 <project>
 
-    <property name="scala_lib_dir" value="${eclipse.home}\configuration\org.eclipse.osgi\bundles\959\1\.cp\lib"/>
+    <property name="scala_lib_dir" value="${eclipse.home}configuration\org.eclipse.osgi\bundles\997\1\.cp\lib"/>
+	
 	<property name="root" value="${basedir}/../.."/>
 
 	<target name="clean">
@@ -28,8 +29,9 @@
 					<arg value="@{infile}"/>
 					<arg value="${root}/java_friendly_signatures/src"/>
 					<classpath>
-						<pathelement location="${root}/bin"/>
 						<pathelement location="${scala_lib_dir}/scala-library.jar"/>
+						<pathelement location="${root}/bin"/>
+						<pathelement location="${root}/3p/lib/httpcomponents-client-4.2.5/lib/commons-codec-1.6.jar"/>
 						<pathelement path="${java.class.path}"/>
 					</classpath>
 				</java>

@@ -10,6 +10,7 @@ import scala.language.dynamics
 import scala.beans._
 import scala.reflect.internal._
 import java.util.logging._
+import org.apache.http._
 
 class Resource(@BeanProperty var context: ClientContext)
   extends Dynamic with ClassNameUtilities {
@@ -28,10 +29,11 @@ class Resource(@BeanProperty var context: ClientContext)
   private def logger = context.getLogger
   private def token = context.getToken
   private def cache = context.getCache
+  private def authenticator = context.getAuthenticator
 
   //// quick-and-dirty type checking
 
-  def isA(resourceClassBriefName: String) = getBriefClassName == resourceClassBriefName
+  private def isA(resourceClassBriefName: String) = getBriefClassName == resourceClassBriefName
 
   //// state
 
@@ -543,7 +545,7 @@ class Resource(@BeanProperty var context: ClientContext)
 
   private def options = {
     Some(Pairs(
-      "Authorization" -> token.auth_header))
+      "Authorization" -> token.authHeader))
   }
 
   private def performAndReload(performer: () => Response) = {
@@ -557,14 +559,30 @@ class Resource(@BeanProperty var context: ClientContext)
   }
 
   protected def perform(performer: () => Response) = {
-    val response = performer()
+    var response = performer()
     if (!response.ok) {
-      throw new BadResponse(response)
+      if (response.code.get == HttpStatus.SC_UNAUTHORIZED) {
+    	val msg = "Request denied (${response.code})"
+    	if (authenticator != null) {
+    	  if (authenticator()) {
+            logger.fine(s"${msg}, but retrying after successful reauthentication")
+            response = performer()
+          } else {
+            logger.fine(s"${msg} and reauthentication failed")
+          }
+    	} else {
+          logger.fine(s"${msg} and reauthentication is impossible")
+    	}
+      }
     }
-    if (response.hasPayload) {
-      response.payload
+    if (response.ok) {
+      if (response.hasPayload) {
+        response.payload
+      } else {
+        null
+      }
     } else {
-      null
+      throw new BadResponse(response)
     }
   }
 

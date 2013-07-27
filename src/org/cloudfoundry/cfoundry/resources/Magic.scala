@@ -19,7 +19,7 @@ abstract class Magic extends Dynamic {
 
   def apply(index: Int) = resources(index)
 
-  private def prop = this match {
+  def prop = this match {
     case MagicProp(v) => v
     case _ => throw new PropertyResourceConfusion(PROP, this)
   }

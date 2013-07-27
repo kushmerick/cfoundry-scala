@@ -36,36 +36,32 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
 
   val excerptLength = 4096
 
-  private def execute[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]) = {
-    val request = makeRequest(classs, path, headers)
-    trace(request)
-    var rawResponse: HttpResponse = null
-    try {
-      rawResponse = httpClient.execute(request)
-    } catch {
-      case x: Exception => throw new HTTPFailure(x)
-    }
-    val response = new ExcerptableHttpResponse(rawResponse, excerptLength)
-    trace(response)
-    Response(response)
+  private def execute[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]): Response = {
+    execute(makeRequest(classs, path, headers))
+  }
+  
+  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[String]): Response = {
+    execute(makeRequest(classs, path, headers, payload))
+  }
+    
+  private def execute(request: HttpRequestBase): Response = try {
+    Response(httpClient.execute(request))
+  } catch {
+    case x: Exception =>
+      request.abort
+      throw new HTTPFailure(x)
+  } finally {
+    request.reset
   }
 
-  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[String]) = {
-    val request = makeRequest(classs, path, headers, payload)
-    trace(request)
-    val response = new ExcerptableHttpResponse(httpClient.execute(request), excerptLength)
-    trace(response)
-    Response(response)
-  }
-
-  private def makeRequest[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]): HttpUriRequest = {
+  private def makeRequest[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]): HttpRequestBase = {
     val request = classs.newInstance
     request.setURI(new URI(endpoint + makePath(path)))
     addHeaders(request, headers)
     request
   }
 
-  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[String]): HttpUriRequest = {
+  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[String]): HttpEntityEnclosingRequestBase = {
     val request = makeRequest(classs, path, headers).asInstanceOf[T]
     setPayload(request, payload)
     request

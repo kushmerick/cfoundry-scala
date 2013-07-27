@@ -23,8 +23,8 @@ class Pairs(val pairs: Map[String, String]) {
 object Pairs {
 
   private type SS = (String, String)
-  def apply(pairs: SS*) = new Pairs(pairs.toMap)
-  def apply(pairs: Iterable[SS]) = new Pairs(pairs.toMap)
+  def apply(pairs: SS*): Pairs = Pairs(pairs.toMap)
+  private def apply(pairs: Iterable[SS]) = new Pairs(pairs.toMap)
 
   def formDecode(encoded: String) = {
     Pairs(

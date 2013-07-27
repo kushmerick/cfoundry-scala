@@ -7,7 +7,6 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
-import java.util.concurrent.Future
 
 abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
   extends ClientResource {
@@ -23,6 +22,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   setCrud(crudFactory(target, _logger))
   clearToken
   setCache(new Cache(100))
+  setAuthenticator(refreshAuthenticator)
 
   //// properties
 
@@ -56,7 +56,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
     return false
   }
 
-  //// login
+  //// authentication
 
   def login(username: String, password: String) = {
     setToken(loginClient.login(username, password))
@@ -68,6 +68,23 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   private def discoverEndpoint(endpointKey: String) = {
     info(endpointKey).string
+  }
+  
+  private def refreshAuthenticator: Authenticator = () => {
+    try {
+      loginClient.refresh(getToken) match {
+        case Some(token) =>
+          setToken(token)
+          true
+        case None =>
+          logger.fine("Auth token can not be refreshed")
+          false
+      }
+    } catch {
+      case x: Exception =>
+        logger.warning(s"Error while refreshing auth token: ${x}")
+        false
+    }
   }
 
   //// info

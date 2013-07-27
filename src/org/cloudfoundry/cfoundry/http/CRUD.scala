@@ -29,13 +29,14 @@ abstract class CRUD(var endpoint: String, val logger: Logger = null) {
     cruD(path, headers)
   }
   def cruD(path: Path, headers: Option[Pairs]): Response
-
+  
   //// path components
 
   def makePath(path: Path) = {
-    path
-      .map(component => component match { case Left(s) => s; case Right(sseq) => sseq.mkString("/") })
-      .mkString("/")  }
+    path.
+    map(component => component match { case Left(s) => s; case Right(sseq) => sseq.mkString("/") }).
+    mkString("/")
+  }
 
   //// endpoint
 

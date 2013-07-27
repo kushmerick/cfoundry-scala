@@ -31,7 +31,7 @@ class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
     s"<Response $c ($s): ${p}>"
   }
 
-  // dual of 'unpack'
+  // just for spec; dual of 'unpack'
   def pack = {
     if (hasPayload && payload.isBlob) throw new NotPackable
     val packed = new HashMap[String, Any]
@@ -73,7 +73,7 @@ object Response {
     new Response(Some(code), payload)
   }
 
-  // dual of 'pack'
+  // just for unit tests; dual of 'pack'
   def unpack(encoded: Chalice) = {
     val packed = encoded.map
     val code =
