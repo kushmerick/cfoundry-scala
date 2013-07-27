@@ -3,11 +3,6 @@ package org.cloudfoundry.cfoundry.resources.spec
 import org.scalatest.matchers._
 import org.scalatest.fixture._
 import org.cloudfoundry.cfoundry.scalatest._
-import org.cloudfoundry.cfoundry.resources._
-import org.cloudfoundry.cfoundry.exceptions._
-import org.cloudfoundry.cfoundry.client.mock._
-import org.cloudfoundry.cfoundry.config._
-import java.util.logging._
 
 class ServiceInstanceSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
   
