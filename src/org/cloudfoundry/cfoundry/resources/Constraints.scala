@@ -2,6 +2,20 @@ package org.cloudfoundry.cfoundry.resources
 
 import org.cloudfoundry.cfoundry.util._
 
+// This code provides support for enumeration constraints such as:
+//    client.foos(depth = 5, page = 4, bif = "baf", bar = "buz")
+// which translates to a URL like this:
+//    /v2/foos?depth=5&page=4&q=bif:baf;bar:buz
+
+// TODO:
+// - more tests
+// - "inline-relations-depth" would pull the additional resources, but our parser
+//   currently ignores them
+// - "page" works fine, but our parser currently does not expose the "total-pages"
+//   metadata that a caller would need to actually use this feature; and also the
+//   parser automatically crawls "next_url" to pull all results.
+// - let's hope no resource ever has a property called "page", "depth", etc.
+
 class Constraint(val prop: String, val value: Any) extends Pair(prop, value) {
 
   private lazy val ids = Set("id", "guid")
@@ -13,12 +27,11 @@ class Constraint(val prop: String, val value: Any) extends Pair(prop, value) {
 
   private lazy val specials = Map(
     "depth" -> "inline-relations-depth",
-    "inline-relation-depth" -> "inline-relations-depth",
-    "recursive" -> "recursive",
-    "page" -> "page",
-    "results-per-page" -> "results-per-page")
+    "inline-relation-depth" -> null,
+    "page" -> null,
+    "results-per-page" -> null)
   lazy val special = specials.contains(prop)
-  lazy val specialProp = specials(prop)
+  lazy val specialProp = { val s = specials(prop); if (s == null) prop else s }
 
   lazy val attribute = !unique && !special
 

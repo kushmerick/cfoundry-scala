@@ -26,7 +26,7 @@ trait CRUDTests extends ShouldMatchers {
     exists(client, noun, resource) should be(false)
   }
   
-  private def sprout(client: MockedClient, noun: String) = {
+  protected def sprout(client: MockedClient, noun: String) = {
     client.selectDynamic(noun).resource
   }
   
@@ -34,8 +34,8 @@ trait CRUDTests extends ShouldMatchers {
     resource.updateDynamic(property)(value)
   }
   
-  private def enumerate(client: MockedClient, noun: String) = {
-    client.selectDynamic(client.getInflector.pluralize(noun)).resources
+  protected def enumerate(client: MockedClient, noun: String, constraints: Pair[String,Any]*) = {
+    client.evaluate(client.getInflector.pluralize(noun), new Constraints(constraints)).resources
   }
   
   private def exists(client: MockedClient, noun: String, resource: Resource) = {

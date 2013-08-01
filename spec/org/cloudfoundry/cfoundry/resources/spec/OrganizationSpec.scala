@@ -9,7 +9,11 @@ class OrganizationSpec extends FlatSpec with ShouldMatchers with MockedClientFix
   override val login = true
 
   it should "be able to use a query to find itself" in { client =>
-    testEnumeration(client, "organization", client.organizations(0))
+    testEnumerationId(client, "organization", client.organizations(0))
+  }
+
+  it should "support 'depth'" in { client =>
+    testEnumerationDepth(client, "organization")
   }
 
 }

@@ -17,10 +17,14 @@ class AppSpec extends FlatSpec with ShouldMatchers with MockedClientFixture with
     app.name = "blah"
     app.space = client.spaces(0)
     app.save
-    testEnumeration(client, "app", app)
+    testEnumerationId(client, "app", app)
     app.destroy
   }
   
+  it should "support 'depth'" in { client =>
+    testEnumerationDepth(client, "app")
+  }
+
   it should "be able to upload and download bits" in { client =>
     pending
   }

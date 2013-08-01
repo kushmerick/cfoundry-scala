@@ -13,7 +13,11 @@ class SpacSpec extends FlatSpec with ShouldMatchers with MockedClientFixture wit
   }
 
   it should "be able to use a query to find itself" in { client =>
-    testEnumeration(client, "space", client.spaces(0))
+    testEnumerationId(client, "space", client.spaces(0))
+  }
+  
+  it should "support 'depth'" in { client =>
+    testEnumerationDepth(client, "space")
   }
 
 }

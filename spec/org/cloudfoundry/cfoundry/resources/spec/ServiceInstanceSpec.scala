@@ -19,8 +19,12 @@ class ServiceInstanceSpec extends FlatSpec with ShouldMatchers with MockedClient
     serviceInstance.space = client.spaces(0)
     serviceInstance.servicePlan = client.services(0).servicePlans(0)
     serviceInstance.save
-    testEnumeration(client, "serviceInstance", serviceInstance)
+    testEnumerationId(client, "serviceInstance", serviceInstance)
     serviceInstance.destroy
+  }
+
+  it should "support 'depth'" in { client =>
+    testEnumerationDepth(client, "serviceInstance")
   }
 
 }
