@@ -459,9 +459,11 @@ abstract class Resource(@BeanProperty var context: ClientContext)
 
   //// destroy
 
-  def destroy = {
+  def destroy: Any = destroy(recursive = false)
+
+  def destroy(recursive: Boolean = false) = {
     if (hasId) {
-      delete
+      delete(recursive)
       cache.eject(this)
       clearId
     }
@@ -574,8 +576,9 @@ abstract class Resource(@BeanProperty var context: ClientContext)
     performAndReload(() => crud.crUd(_getUrl)(options)(Some(Chalice(JSON.serialize(Chalice(payload))))))
   }
 
-  private def delete = {
-    perform(() => crud.cruD(_getUrl)(options))
+  private def delete(recursive: Boolean) = {
+    val path = _getUrl + (if (recursive) "?recursive=true" else "")
+    perform(() => crud.cruD(path)(options))
   }
 
   def options = {

@@ -18,5 +18,7 @@ class SampleResource extends Resource(null) {
   property("foo_count", typ="int", default = Some(123))
   property("read_only", default = Some("foo"), readOnly = true)
   property("description", applicable = false)
+  property("recursive", recursive = true, default = (Some(() => {called=true; "foo"})))
+  var called = false
 
 }

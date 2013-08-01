@@ -55,5 +55,14 @@ class ResourceSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
       resource.description
     }
   }
+  
+  it should "handle a recursive property" in {
+    // pretty-printing a resource should not invoke the lazy default function of a recursive property
+    resource.toString
+    resource.asInstanceOf[SampleResource].called should be(false)
+    // but explicitly asking for a recursive property should invoke it's lazy default function
+    resource.recursive.string should equal("foo")
+    resource.asInstanceOf[SampleResource].called should be(true)
+  }
 
 }

@@ -4,25 +4,16 @@ import org.scalatest.matchers._
 import org.scalatest.fixture._
 import org.cloudfoundry.cfoundry.scalatest._
 
-class SpacSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
-  
+class SpacSpec extends FlatSpec with ShouldMatchers with MockedClientFixture with CRUDTests with EnumerationTests {
+
   override val login = true
-  
+
   "Space" should "be CRUDable" in { client =>
-    // C
-    val space = client.space.resource
-    space.name = "blah"
-    space.organization = client.organizations(0)
-    space.save
-    // R
-    client.spaces.contains(space) should be(true)
-    // U
-    space.name = "blug"
-    space.save
-    space.name.string should be("blug")
-    // D
-    space.destroy
-    client.spaces.contains(space) should be(false)
+    testCRUD(client, "space", Map("organization" -> client.organizations(0)))
+  }
+
+  it should "be able to use a query to find itself" in { client =>
+    testEnumeration(client, "space", client.spaces(0))
   }
 
 }

@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-07-31 08:07:26.63 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-08-01 10:25:12.122 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.client.java_friendly
 import scala.collection.JavaConversions._
 trait ClientJF {
@@ -6,7 +6,7 @@ trait ClientJF {
   def updateDynamic(noun: String)(value: Any): Unit
   def getAppsUrl: java.lang.String = selectDynamic("appsUrl").prop.asInstanceOf[java.lang.String]
   def getCloudfoundryVersion: java.lang.Integer = selectDynamic("cloudfoundryVersion").prop.asInstanceOf[java.lang.Integer]
-  def getCurrentUser: java.lang.String = selectDynamic("currentUser").prop.asInstanceOf[java.lang.String]
+  def getCurrentUser: org.cloudfoundry.cfoundry.resources.Resource = selectDynamic("currentUser").prop.asInstanceOf[org.cloudfoundry.cfoundry.resources.Resource]
   def getDescription: java.lang.String = selectDynamic("description").prop.asInstanceOf[java.lang.String]
   def getName: java.lang.String = selectDynamic("name").prop.asInstanceOf[java.lang.String]
   def getOrganizationsUrl: java.lang.String = selectDynamic("organizationsUrl").prop.asInstanceOf[java.lang.String]
@@ -17,6 +17,7 @@ trait ClientJF {
   def getServicesUrl: java.lang.String = selectDynamic("servicesUrl").prop.asInstanceOf[java.lang.String]
   def getSpacesUrl: java.lang.String = selectDynamic("spacesUrl").prop.asInstanceOf[java.lang.String]
   def getTarget: java.lang.String = selectDynamic("target").prop.asInstanceOf[java.lang.String]
+  def getUsersUrl: java.lang.String = selectDynamic("usersUrl").prop.asInstanceOf[java.lang.String]
   def getVersion: java.lang.String = selectDynamic("version").prop.asInstanceOf[java.lang.String]
   def getServicePlans: java.util.List[org.cloudfoundry.cfoundry.resources.ServicePlan] = selectDynamic("servicePlans").resources.asInstanceOf[scala.collection.Seq[org.cloudfoundry.cfoundry.resources.ServicePlan]]
   def newServicePlan: org.cloudfoundry.cfoundry.resources.ServicePlan = selectDynamic("servicePlan").resource.asInstanceOf[org.cloudfoundry.cfoundry.resources.ServicePlan]
@@ -26,6 +27,8 @@ trait ClientJF {
   def newServiceBinding: org.cloudfoundry.cfoundry.resources.ServiceBinding = selectDynamic("serviceBinding").resource.asInstanceOf[org.cloudfoundry.cfoundry.resources.ServiceBinding]
   def getSpaces: java.util.List[org.cloudfoundry.cfoundry.resources.Space] = selectDynamic("spaces").resources.asInstanceOf[scala.collection.Seq[org.cloudfoundry.cfoundry.resources.Space]]
   def newSpace: org.cloudfoundry.cfoundry.resources.Space = selectDynamic("space").resource.asInstanceOf[org.cloudfoundry.cfoundry.resources.Space]
+  def getUsers: java.util.List[org.cloudfoundry.cfoundry.resources.User] = selectDynamic("users").resources.asInstanceOf[scala.collection.Seq[org.cloudfoundry.cfoundry.resources.User]]
+  def newUser: org.cloudfoundry.cfoundry.resources.User = selectDynamic("user").resource.asInstanceOf[org.cloudfoundry.cfoundry.resources.User]
   def getServices: java.util.List[org.cloudfoundry.cfoundry.resources.Service] = selectDynamic("services").resources.asInstanceOf[scala.collection.Seq[org.cloudfoundry.cfoundry.resources.Service]]
   def newService: org.cloudfoundry.cfoundry.resources.Service = selectDynamic("service").resource.asInstanceOf[org.cloudfoundry.cfoundry.resources.Service]
   def getServiceAuthTokens: java.util.List[org.cloudfoundry.cfoundry.resources.ServiceAuthToken] = selectDynamic("serviceAuthTokens").resources.asInstanceOf[scala.collection.Seq[org.cloudfoundry.cfoundry.resources.ServiceAuthToken]]

@@ -1,10 +1,8 @@
-- better unit test coverage
-
-- all properties & relationships of all resources -- very incomplete
-  today
-
 - support for dependencies that hang off resources: app bits & files,
-  and user roles.
+  and user roles [IN PROGRESS]
+
+- all properties & relationships of all resources -- rather incomplete
+  today
 
 - Eliminate all the code for each CF resource and it's
   properties/children/parents.  Two approaches:
