@@ -8,7 +8,7 @@ class SpacSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
   
   override val login = true
   
-  "Space" should "should be CRUDable" in { client =>
+  "Space" should "be CRUDable" in { client =>
     // C
     val space = client.space.resource
     space.name = "blah"

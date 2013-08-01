@@ -5,6 +5,7 @@ import org.cloudfoundry.cfoundry.http._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.io._
+import org.apache.commons.codec.binary._
 
 /*
  * Chalice is a _m_a_g_i_c_a_l_ container/wrapper around either:
@@ -17,6 +18,8 @@ import java.io._
  */
 
 class Chalice(val _obj: Any) {
+  
+  import Chalice._
 
   private lazy val obj: Any =
     if (_obj.isInstanceOf[Chalice]) {
@@ -99,6 +102,8 @@ class Chalice(val _obj: Any) {
       bool.toString
     } else if (isNull) {
       null
+    } else if (isBlob) {
+      b64.encodeAsString(blob)
     } else {
       unexpectedType(obj, null)
     }
@@ -150,7 +155,16 @@ class Chalice(val _obj: Any) {
 
   lazy val isBlob = obj.isInstanceOf[B]
 
-  lazy val blob = asA[B]
+  lazy val blob: B =
+    if (isBlob) {
+      asA[B]
+    } else if (isString) {
+      string.getBytes
+    } else if (isNull) {
+      null
+    } else {
+      unexpectedType(obj, null)
+    }
 
   //// raw underlying object (are you sure you want to call this :-)
 
@@ -193,5 +207,6 @@ class Chalice(val _obj: Any) {
 object Chalice {
 
   def apply(x: Any) = new Chalice(x)
+  val b64 = new Base64
 
 }

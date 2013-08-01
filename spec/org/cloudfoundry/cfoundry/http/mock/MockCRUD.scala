@@ -47,12 +47,12 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
   private def tick = _time += 1
   private def time = _time.toString
 
-  override def Crud(path: Path, headers: Option[Pairs], payload: Option[String]) = C_rud(path, headers, payload)
-  private def C_rud(path: Path, headers: Option[Pairs], payload: Option[String]) = {
+  override def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = C_rud(path, headers, payload)
+  private def C_rud(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = {
     tick
     doit(
       { fixtures.Crud.getTree(testName).getTree(time).getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
-      payload.get,
+      payload.get.string,
       { teacher.Crud(path, headers, payload) })
   }
 
@@ -65,12 +65,12 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
       { teacher.cRud(path, headers) })
   }
 
-  override def crUd(path: Path, headers: Option[Pairs], payload: Option[String]) = crU_d(path, headers, payload)
-  private def crU_d(path: Path, headers: Option[Pairs], payload: Option[String]) = {
+  override def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = crU_d(path, headers, payload)
+  private def crU_d(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = {
     tick
     doit(
       { fixtures.crUd.getTree(testName).getTree(time).getTree(makePathString(path)).getTree(makeHeadersString(headers)) },
-      payload.get,
+      payload.get.string,
       { teacher.crUd(path, headers, payload) })
   }
 

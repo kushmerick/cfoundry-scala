@@ -8,7 +8,7 @@ class ServiceInstanceSpec extends FlatSpec with ShouldMatchers with MockedClient
   
   override val login = true
   
-  "ServiceInstance" should "should be CRUDable" in { client =>
+  "ServiceInstance" should "be CRUDable" in { client =>
     // C
     val serviceInstance = client.serviceInstance.resource
     serviceInstance.space = client.spaces(0)

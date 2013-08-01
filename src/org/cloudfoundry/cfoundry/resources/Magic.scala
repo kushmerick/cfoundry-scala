@@ -3,6 +3,8 @@ package org.cloudfoundry.cfoundry.resources
 import org.cloudfoundry.cfoundry.exceptions._
 import scala.language.dynamics
 
+// TODO: Magic and Chalice are very similar -- merge them?!
+
 abstract class Magic extends Dynamic {
 
   import Magic._

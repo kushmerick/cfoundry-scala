@@ -11,14 +11,18 @@ object Sample extends scala.App {
   val client = new Client(target, logger)
 
   client.login(username, password)
-  
-  Console.println(s"CF version: ${client.cloudfoundry_version.int}; client version = ${client.cfoundry_scala_version.string}")
+
+  Console.println(s"CF version: ${client.cloudfoundryVersion.int}; client version = ${client.version.string}")
 
   for (org <- client.organizations) {
     for (space <- org.spaces) {
       Console.println(s"Org ${org} has space ${space}")
     }
   }
+  
+  val id = client.organizations(0).id
+  val org = client.organizations(id).resource
+  Console.println(s"Found organization ${org} with id ${id}")
 
   for (
     service <- client.services;
@@ -41,6 +45,15 @@ object Sample extends scala.App {
   space.name = "foobar"
   space.save
 
+  /* TODO!
+   * 
+   val org = client.organizations(0)
+  val user = client.user
+  user.username = "joe@example.com"
+  user.save
+  org.members << 
+*/
+  
   client.logout
 
   private def arguments = {

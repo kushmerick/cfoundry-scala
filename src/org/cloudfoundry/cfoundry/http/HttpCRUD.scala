@@ -16,7 +16,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
   
   import CRUD._
 
-  override def Crud(path: Path, headers: Option[Pairs], payload: Option[String]): Response = {
+  override def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
     execute(classOf[HttpPost], path, headers, payload)
   }
 
@@ -24,7 +24,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     execute(classOf[HttpGet], path, headers)
   }
 
-  override def crUd(path: Path, headers: Option[Pairs], payload: Option[String]): Response = {
+  override def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
     execute(classOf[HttpPut], path, headers, payload)
   }
 
@@ -34,18 +34,21 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
 
   ////////////////////
 
-  val excerptLength = 4096
-
   private def execute[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]): Response = {
     execute(makeRequest(classs, path, headers))
   }
   
-  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[String]): Response = {
+  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
     execute(makeRequest(classs, path, headers, payload))
   }
     
+  private val excerptLength = 4096
+
   private def execute(request: HttpRequestBase): Response = try {
-    Response(httpClient.execute(request))
+    trace(request)
+    val response = new ExcerptableHttpResponse(httpClient.execute(request), excerptLength)
+    trace(response)
+    Response(response)
   } catch {
     case x: Exception =>
       request.abort
@@ -61,7 +64,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     request
   }
 
-  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[String]): HttpEntityEnclosingRequestBase = {
+  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[Chalice]): HttpEntityEnclosingRequestBase = {
     val request = makeRequest(classs, path, headers).asInstanceOf[T]
     setPayload(request, payload)
     request
@@ -85,9 +88,9 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     }
   }
 
-  private def setPayload(request: HttpEntityEnclosingRequest, payload: Option[String]) = {
+  private def setPayload(request: HttpEntityEnclosingRequest, payload: Option[Chalice]) = {
     payload match {
-      case Some(payload) => request.setEntity(new StringEntity(payload))
+      case Some(payload) => request.setEntity(new ByteArrayEntity(payload.blob))
       case None =>
     }
     request
@@ -99,14 +102,14 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     var message = s"${request.getRequestLine}: headers=${headers(request)}"
     type E = HttpEntityEnclosingRequest
     if (request.isInstanceOf[E]) {
-      val excerpt = Entity.excerpt(request.asInstanceOf[E], maxExcerpt)
+      val excerpt = Entity.excerpt(request.asInstanceOf[E], excerptLength)
       message += s"; payload=${excerpt}"
     }
     trace(s">> ${message}")
   }
 
   private def trace(response: ExcerptableHttpResponse): Unit = {
-    val payload = if (response.getEntity != null) s", payload=${Entity.excerpt(response, maxExcerpt)}" else ""
+    val payload = if (response.getEntity != null) s", payload=${Entity.excerpt(response, excerptLength)}" else ""
     trace(s"<< code=${response.getStatusLine.getStatusCode}, headers=${headers(response)}${payload}")
   }
 
@@ -122,8 +125,6 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
       .toList
       .mkString("[", "; ", "]")
   }
-
-  val maxExcerpt = 4096
 
   /////////////////////
 

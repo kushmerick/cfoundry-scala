@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-07-26 23:28:40.601 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-07-31 08:07:25.3 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.resources.java_friendly
 import scala.collection.JavaConversions._
 trait ServiceBindingJF {

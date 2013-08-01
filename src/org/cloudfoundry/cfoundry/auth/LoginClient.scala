@@ -9,8 +9,10 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
 
   val crud = crudFactory(endpoint, logger)
 
-  def login(username: String, password: String) = {
-    val content = Pairs("username" -> username, "password" -> password)
+  def login(username: String, password: String) = loginGeneric(username, "password", password)
+  
+  private def loginGeneric(username: String, pwKey: String, pwVal: String) = {
+    val content = Pairs("username" -> username, pwKey -> pwVal)
     getToken("password", content) match {
       case Left(token) => token
       case Right(response) => throw new NotAuthorized(response, username)
@@ -30,7 +32,7 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
   }
   
   private def getToken(grantType: String, content: Pairs) = {
-    val payload = (Pairs("grant_type" -> grantType) ++ content).formEncode
+    val payload = Chalice((Pairs("grant_type" -> grantType) ++ content).formEncode)
     val response = crud.Crud("/oauth/token")(LOGIN_OPTIONS)(Some(payload))
     if (response.ok) {
       Left(new Token(response.payload))
@@ -42,5 +44,25 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
   private lazy val LOGIN_OPTIONS = Some(Pairs(
     "Content-Type" -> HttpCRUD.FORM_ENCODED,
     "Authorization" -> "Basic Y2Y6")) // TODO: b64("cf:") = Y2Y6, but -- err, umm, ... Huh?!?!
+
+  // Warning: The following alleged SSO support is a ridiculous hack that doesn't work.
+    
+  def loginSso(username: String) = loginGeneric(username, "passcode", getPasscode)
+  
+  private lazy val Passcode = """\W(\d{8})\W""".r
+
+  def getPasscode = {
+    val response = crud.cRud("/passcode")(LOGIN_OPTIONS)
+    if (response.ok) {
+      val payload = response.payload
+      val body = if (payload.isBlob) new String(payload.blob) else payload.string 
+      body match {
+        case Passcode(passcode) => passcode
+    	case _ => throw new SSOFailure(message = "Missing passcode", response = response)
+      }
+    } else {
+      throw new SSOFailure(response = response)
+    }
+  }
 
 }

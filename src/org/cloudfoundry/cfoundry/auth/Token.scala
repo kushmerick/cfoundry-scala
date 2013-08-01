@@ -12,6 +12,8 @@ class Token(val info: Chalice = null) {
   
   lazy val refreshToken = info("refresh_token").string
   
+  lazy val userId = decodedPayload("user_id")
+  
   lazy val decodedPayload = {
     var encoded = accessToken.split("\\.")(1) // header.payload.crypto
     while (encoded.length % 4 > 0) {

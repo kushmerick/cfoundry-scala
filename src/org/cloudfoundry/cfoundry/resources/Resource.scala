@@ -12,7 +12,7 @@ import scala.reflect.internal._
 import java.util.logging._
 import org.apache.http._
 
-class Resource(@BeanProperty var context: ClientContext)
+abstract class Resource(@BeanProperty var context: ClientContext)
   extends Dynamic with ClassNameUtilities {
 
   //// constants
@@ -44,6 +44,7 @@ class Resource(@BeanProperty var context: ClientContext)
   private val parents = Map[String, Class[_]]()
 
   private var dirty = Set[Property]()
+  def isDirty = dirty.nonEmpty
 
   // just for java_friendly/Generate 
   def getProperties = properties
@@ -57,8 +58,7 @@ class Resource(@BeanProperty var context: ClientContext)
   property("description")
   property(url, readOnly = true)
 
-  //// properties (TODO: should be 'static', but can't just move them to
-  //// a companion object due to subclassing.)
+  //// properties
 
   protected def property(
     name: String,
@@ -69,9 +69,9 @@ class Resource(@BeanProperty var context: ClientContext)
     readOnly: Boolean = false,
     parental: Boolean = false,
     metadata: Boolean = false,
-    options: scala.collection.Map[String,Any] = Map()) = {
+    recursive: Boolean = false) = {
     if (applicable) {
-      val property = new Property(name, typ, source, default, readOnly, parental, metadata, options)
+      val property = new Property(name, typ, source, default, readOnly, parental, metadata, recursive)
       properties += name -> property
     } else {
       // TODO: Flesh out the Resource hierarchy to avoid this ugliness
@@ -265,27 +265,47 @@ class Resource(@BeanProperty var context: ClientContext)
       throw new InvalidProperty(property.name, this)
     }
   }
-
+  
   //// model magic via dynamic invocation
 
-  def applyDynamic(noun: String)(args: Any*): Magic = doApplyDynamic(noun, args)
+  def applyDynamic(noun: String)(args: Any*) = doApplyDynamic(noun, args)
 
-  def doApplyDynamic(noun: String, args: scala.Seq[Any]) = {
+  def doApplyDynamic(noun: String, args: scala.Seq[Any]): Magic = {
     if (args.isEmpty) {
       // client.services()
       // service.servicePlans()
       // service.servicePlan()
       // etc
       selectDynamic(noun)
-    } else if (args.length == 1 && args(0).isInstanceOf[Int]) {
-      // client.services(3) -- kinda bizarre but we'll interpret as "the 4th service"
-      MagicResource(selectDynamic(noun).resources(args(0).asInstanceOf[Int]))
+    } else if (args.length == 1) {
+      args(0) match {
+        case s: String => {
+          // client.services("abcd1234") means "the service with id=abcd1234"
+          MagicResource(applyDynamicNamed(noun)(new Constraint("id", s)).resource)
+        }
+        case MagicProp(a) => {
+          // like previous case, but where id is embedded in a Magic value
+          applyDynamic(noun)(a)
+        }
+        case i: Int => {
+          // client.services(3) means "the 4th service" (yeah, kinda bizarre)
+          MagicResource(selectDynamic(noun).resources(i))
+        }
+      }
     } else {
       throw new UnexpectedArguments(noun, args)
     }
   }
+  
+  def applyDynamicNamed(noun: String)(constraints: Pair[String,Any]*) = {
+    evaluate(noun, new Constraints(constraints))
+  }
 
   def selectDynamic(noun: String) = {
+    evaluate(noun, Constraints.NONE)
+  }
+
+  def evaluate(noun: String, constraints: Constraints) = {
     if (hasProperty(noun)) {
       if (hasParent(noun)) {
         // servicePlan.service
@@ -311,20 +331,14 @@ class Resource(@BeanProperty var context: ClientContext)
               new MissingRequiredProperty(this, properties(pgpn)))
           }
         }
+        constraintWarning(noun, constraints)
         MagicResource(getData(noun))
       } else {
         val property = properties(noun)
-        if (property.typ == "blob") {
-          // app.bits
-          logger.fine(s"Retrieving blob '${noun}' of resource ${this}")
-          val get = property.options.getOrElse("get", property.name)
-          val payload = perform(() => crud.cRud(s"${getUrl}/${get}")(options))
-          MagicProp(payload)
-        } else {
-          // servicePlan.description
-          logger.fine(s"Selecting property '${noun}' of resource ${this}")
-          MagicProp(getData(noun))
-        }
+        // servicePlan.description
+        logger.fine(s"Selecting property '${noun}' of resource ${this}")
+        constraintWarning(noun, constraints)
+        MagicProp(getData(noun))
       }
     } else if (hasChildren(inflector.pluralize(noun))) {
       val factory = factoryFor(noun)
@@ -336,15 +350,29 @@ class Resource(@BeanProperty var context: ClientContext)
           val parentPropertyName = inflector.lowerize(getBriefClassName)
           attachParent(parentPropertyName, this, child)
         }
+        constraintWarning(noun, constraints)
         MagicResource(child)
       } else {
         // servicePlan.serviceInstances
         logger.fine(s"Enumerating '${noun}' children of resource ${this}")
         val path = getData[String](childrenPathPropertyName(noun))
-        MagicResources(enumerate(factory, path))
+        val resources = enumerate(factory, path, constraints)
+        if (resources.size==1 && constraints.exists(_.unique)) {
+          // servicePlan.serviceInstances(id = foo, bar = baz)
+          MagicResource(resources(0))
+        } else {
+          // servicePlan.serviceInstances
+          MagicResources(resources)
+        }
       }
     } else {
       throw new InvalidProperty(noun, this)
+    }
+  }
+  
+  def constraintWarning(noun: String, constraints: Constraints) = {
+    if (constraints.nonEmpty) {
+      logger.warning(s"Ignoring constraints ${constraints.encode} for ${noun}")
     }
   }
 
@@ -400,24 +428,29 @@ class Resource(@BeanProperty var context: ClientContext)
     new Factory(noun, context)
   }
 
-  private def enumerate(factory: Factory, _path: String): Seq[Resource] = {
-    var path = _path
+  private def enumerate(factory: Factory, _path: String, constraints: Constraints): Seq[Resource] = {
+    var path = _path + constraints.encode
     val resources = new ArrayBuilder.ofRef[Resource]
     do {
       val payload = perform(() => crud.cRud(path)(options))
-      resources ++= payload("resources").seq.map(pload => factory.create(pload))
-      path = payload("next_url").string
+      if (payload.map.contains("resources")) {
+        resources ++= payload("resources").seq.map(pload => factory.create(pload))
+        path = payload("next_url").string
+      } else {
+        resources += factory.create(payload)
+        path = null
+      }
     } while (path != null)
     resources.result
   }
-
+  
   //// save = create if resource does not exist on the server, or update if it does
 
   def save = {
     if (isLocalOnly) {
       create
     } else {
-      if (dirty.nonEmpty) update
+      if (isDirty) update
     }
     cache.touch(this)
   }
@@ -454,7 +487,9 @@ class Resource(@BeanProperty var context: ClientContext)
 
   //// property helpers
 
-  private def getUrl = {
+  // this need to be public for Appendages, so the "_" is to avoid collision
+  // with "getUrl" from java_friendly/Generate 
+  def _getUrl = {
     if (hasId && !hasData(url)) {
       if (data.size == 1) {
         // if we just have the id, then we'll assume we're lazily
@@ -499,7 +534,7 @@ class Resource(@BeanProperty var context: ClientContext)
   
   import CRUD._
 
-  private def create = {
+  protected def create = {
     val content = Map[String, Any]()
     for ((propertyName, property) <- properties) {
       if (property.readOnly || property.parental) {
@@ -522,33 +557,33 @@ class Resource(@BeanProperty var context: ClientContext)
         content.put(parent_guid_key(parentName), parentGuid)
       }
     }
-    val payload = JSON.serialize(Chalice(content))
+    val payload = Chalice(JSON.serialize(Chalice(content)))
     performAndReload(() => crud.Crud(absolutePath)(options)(Some(payload)))
   }
 
   private def read = {
-    performAndReload(() => crud.cRud(getUrl)(options))
+    performAndReload(() => crud.cRud(_getUrl)(options))
   }
 
-  private def update = {
+  protected def update = {
     val payload =
       dirty
       .filter(property => property.entity && !property.parental && !property.readOnly)
       .map(property => property.getTrueSource -> getData(property))
       .toMap
-    performAndReload(() => crud.crUd(getUrl)(options)(Some(JSON.serialize(Chalice(payload)))))
+    performAndReload(() => crud.crUd(_getUrl)(options)(Some(Chalice(JSON.serialize(Chalice(payload))))))
   }
 
   private def delete = {
-    perform(() => crud.cruD(getUrl)(options))
+    perform(() => crud.cruD(_getUrl)(options))
   }
 
-  private def options = {
+  def options = {
     Some(Pairs(
       "Authorization" -> token.authHeader))
   }
 
-  private def performAndReload(performer: () => Response) = {
+  protected def performAndReload(performer: () => Response) = {
     // TODO: I think this is wrong.  fromInfo expects a single 'resource'
     // structure from the response payload.  But this gives it the entire
     // payload.  It should be something like:
@@ -558,7 +593,7 @@ class Resource(@BeanProperty var context: ClientContext)
     dirty.clear
   }
 
-  protected def perform(performer: () => Response) = {
+  def perform(performer: () => Response) = {
     var response = performer()
     if (!response.ok) {
       if (response.code.get == HttpStatus.SC_UNAUTHORIZED) {
@@ -609,7 +644,11 @@ class Resource(@BeanProperty var context: ClientContext)
 
   def safeGetData(property: Property) = {
     try {
-      getData(property).toString
+      if (property.recursive) {
+        "<recursive>"
+      } else {
+        getData(property).toString
+      }
     } catch {
       case x: Exception => s"{${x}}"
     }
@@ -617,7 +656,7 @@ class Resource(@BeanProperty var context: ClientContext)
 
   protected def toStringDecoration = {
     val s = new StringBuilder
-    if (dirty.nonEmpty) s ++= "D"
+    if (isDirty) s ++= "D"
     if (isLocalOnly) s ++= "L"
     s.result
   }

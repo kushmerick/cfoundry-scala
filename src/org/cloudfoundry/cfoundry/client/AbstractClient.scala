@@ -7,6 +7,8 @@ import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.util.logging._
+import scala.collection.mutable._
+import org.apache.http._
 
 abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, target: String, _logger: Logger = null)
   extends ClientResource {
@@ -27,10 +29,11 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// properties
 
   property("target", default = Some(target), readOnly = true)
-  property("cfoundry_scala_version", default = Some(Version.version), readOnly = true)
-  property("cloudfoundry_version", typ = "int", default = lazyCloudfoundryVersion, readOnly = true)
-  property("name", default = Some(name))
-  property("description", default = Some(description))
+  property("name", default = Some(name), readOnly = true)
+  property("description", default = Some(description), readOnly = true)
+  property("version", default = Some(Version.version), readOnly = true)
+  property("cloudfoundryVersion", typ = "int", default = lazyCloudfoundryVersion, readOnly = true)
+  property("currentUser", typ = "resource", default = lazyCurrentUser, readOnly = true, recursive = true) 
 
   property("id", applicable = false) // TODO: Resource assumes everything has an id?!
   property("url", applicable = false)
@@ -61,6 +64,10 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   def login(username: String, password: String) = {
     setToken(loginClient.login(username, password))
   }
+  
+  def loginSso(username: String) = {
+    setToken(loginClient.loginSso(username))
+  }
 
   def logout = {
     clearToken
@@ -86,18 +93,39 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
         false
     }
   }
+  
+  private def currentUser = {
+    if (authenticated) {
+      try {
+        this.users(guid = token.userId).resource
+      } catch {
+        case x: BadResponse => {
+          throw if (x.response.code.get == HttpStatus.SC_FORBIDDEN) {
+            // only admins can enumerate /v2/users -- even to find out information about myself?!
+            new NotAuthorized(x.response, "")
+          } else {
+            x
+          }
+        }
+      }
+    } else {
+      throw new NotAuthenticated
+    }
+  }
+  
+  private def lazyCurrentUser = Some(
+    (() => currentUser).asInstanceOf[LazyDefault]
+  )
 
   //// info
 
-  protected def info = perform(() => getCrud.cRud("/info")())
+  private def info = perform(() => getCrud.cRud("/info")())
 
   protected def cloudfoundryVersion = info("version").int
 
-  protected def lazyCloudfoundryVersion = {
-    Some(
-      (() => cloudfoundryVersion).asInstanceOf[LazyDefault] // [!!&&**&&!!]
-      )
-  }
+  private def lazyCloudfoundryVersion = Some(
+    (() => cloudfoundryVersion).asInstanceOf[LazyDefault] // [!!&&**&&!!]
+  )
 
   //// auth clients
 

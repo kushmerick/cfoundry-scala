@@ -14,7 +14,8 @@ class Sample {
 
 		Client client = new Client(target, logger());
 
-		System.out.println("CF version: " + client.getCloudfoundryVersion() + "; client version: " + client.getCfoundryScalaVersion());
+		System.out.println("Authenticated as " + client.getCurrentUser());
+		System.out.println("CF version: " + client.getCloudfoundryVersion() + "; client version: " + client.getVersion());
 
 		client.login(username, password);
 
@@ -23,6 +24,11 @@ class Sample {
 				System.out.println("Org " + org + " has space " + space);
 			}
 		}
+		
+		// TODO: JF doesn't yet support constraints
+	    // String id = client.getOrganizations().get(0).getId();
+		// Organization org = client.getOrganizations(id)
+		// Console.println("Found organization " + org + " with id " + id)
 
 		for (Service service : client.getServices()) {
 			for (ServicePlan servicePlan : service.getServicePlans()) {

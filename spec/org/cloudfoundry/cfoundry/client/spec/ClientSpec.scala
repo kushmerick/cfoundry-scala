@@ -29,12 +29,12 @@ class ClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
   }
 
   it should "know its version" in { client =>
-    client.cfoundry_scala_version.string should equal(Version.version)
+    client.version.string should equal(Version.version)
   }
 
   it should "know CF's version" in { client =>
     val CLOUDFOUNDRY_VERSION = 2 // umm, err, uhh, ...
-    client.cloudfoundry_version.int should equal(CLOUDFOUNDRY_VERSION)
+    client.cloudfoundryVersion.int should equal(CLOUDFOUNDRY_VERSION)
   }
 
   it should "not have a id" in { client =>
