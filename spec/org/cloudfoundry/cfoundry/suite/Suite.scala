@@ -34,6 +34,8 @@ class Suite
     new JSONSpec,
     new PairsSpec,
     new SanitizerSpec
+    // TODO: Manually enumerating these tests is annoying.  How can we leverage scalatest's
+    // discovery magic, yet still have a global beforeAll/afterAll hook?
   )
   with org.scalatest.BeforeAndAfterAll {
   
@@ -49,10 +51,10 @@ class Suite
   var LOGFILE = "cfoundry-scala-spec.log"
 
   private def configureLogger = {
-	val logger = Logger.getGlobal
+    val logger = Logger.getGlobal
     if (!logger.getHandlers.exists(handler => handler.isInstanceOf[ConsoleHandler])) {
-      // TODO: The Eclipse console displays two copies of every message.  But if I don't
-      // add this handler, then none are displayed?!
+      // TODO: The Eclipse console displays two copies of every message, but
+      // without this handler, then none are displayed?!
       logger.addHandler(new ConsoleHandler)
     }
     val logfile = new FileHandler(LOGFILE, 10<<20, 1, true) // keep last 10MB of logs
@@ -65,7 +67,7 @@ class Suite
   private def starting(start: Boolean) = {
     val s = if (start) "START" else "END"
     val t = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date)
-    Logger.getGlobal.info(s"~ ~ ~ ~ ~ ${s}ING test suite ${this.getClass.getName} at ${t} ~ ~ ~ ~ ~")
+    Logger.getGlobal.info(s"~ ~ ~ ~ ~ ${s}ING test suite ${getClass.getName} at ${t} ~ ~ ~ ~ ~")
   }
 
 }
