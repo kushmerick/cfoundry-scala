@@ -10,8 +10,6 @@ import java.util.logging._
 
 class Fixtures(val basedir: String, val endpoint: String, val logger: Logger) {
 
-  import Fixtures._
-
   /*
    * CRUD fixtures are represented as a tree of depth:
    *   - 5 (test -> time -> path -> headers -> response) for cRud or cruD; or
@@ -63,15 +61,7 @@ class Fixtures(val basedir: String, val endpoint: String, val logger: Logger) {
 
   def fsEncode(raw: String) = {
     // make 'raw' safe for a pathname -- many choices here...
-    val cooked = org.apache.commons.codec.digest.DigestUtils.shaHex(raw.getBytes(UTF8))
-    logger.fine(s"Encoding ${raw} to ${cooked}")
-    cooked
+    org.apache.commons.codec.digest.DigestUtils.shaHex(raw.getBytes(UTF8))
   }
-
-}
-
-private object Fixtures {
-
-  val UTF8 = "UTF-8"
 
 }

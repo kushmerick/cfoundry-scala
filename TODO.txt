@@ -1,11 +1,31 @@
 - support for dependencies that hang off resources: app bits & files,
   and user roles [IN PROGRESS]
 
-- all properties & relationships of all resources -- rather incomplete
-  today
+- support for custom HTP request headers
 
-- Eliminate all the code for each CF resource and it's
-  properties/children/parents.  Two approaches:
+- set up automatic CI (eg Travis)
+
+- use www.scala-sbt.org
+
+- tests should know whether they required admin or not (e.g. create
+  service vs service instance); and mark themselves pending if they
+  require admin but don't have it.
+
+- all properties & relationships of all resources -- rather incomplete
+  today.
+  
+- add a guid to every fake_foo_bar (see ResourceFixture#fakeFor), so
+  subsequent tests to proceed if a prior test doesn't clean up
+  its garbage (and enable parallel testing?!).  trivial, but let's
+  wait until we're confident that fixture garbage collection is really
+  working right. 
+
+- Fake resources are generated in two different ways: CRUDTests#testCRUD
+  and ResourceFixture#createResource.  Can/should these be unified?
+
+- To avoid the endless race for cfoundry-scala to catch up to CF, can we
+  eliminate all the code for each CF resource and it's
+  properties/children/parents?  Two approaches:
 
    o Grab the entire payload from CC rather than plucking out known
     items; if CC sends "foo_guid" then infer parent Foo; if CC sends

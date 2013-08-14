@@ -35,9 +35,7 @@ object Pairs {
         }))
   }
 
-  private def encode(s: String) = java.net.URLEncoder.encode(s, UTF8)
-  private def decode(s: String) = java.net.URLDecoder.decode(s, UTF8)
-
-  private val UTF8 = "UTF-8"
+  private def encode(s: String) = java.net.URLEncoder.encode(s, utf8)
+  private def decode(s: String) = java.net.URLDecoder.decode(s, utf8)
 
 }

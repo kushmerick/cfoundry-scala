@@ -1,9 +1,9 @@
 package org.cloudfoundry.cfoundry.http.mock
 
 import org.cloudfoundry.cfoundry.http._
-
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.config._
+import org.cloudfoundry.cfoundry.exceptions._
 import java.io._
 import java.util.logging._
 
@@ -98,7 +98,7 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
     if (payload.isDefined) {
       JSON.serialize(payload.get)
     } else {
-      throw new RuntimeException("Internal error: Missing payload for Crud or crUd")
+      throw new CFoundryException("Internal error: Missing payload for Crud or crUd")
     }
   }
 
@@ -110,7 +110,7 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
 
   private def doit(getFixture: => Fixture, arg: String, askTeacher: => Response) = {
     if ((observing || learning) && teacher == null) {
-      throw new RuntimeException("Learning or observing without a teacher")
+      throw new CFoundryException("Learning or observing without a teacher")
     }
     if (observing) {
       askTeacher
@@ -122,7 +122,7 @@ class MockCRUD(_endpoint: String, _logger: Logger) extends CRUD(_endpoint, _logg
       } catch {
         case x: Exception => {
           if (testing) {
-            throw new RuntimeException(s"No fixture for sanitized argument ${sanitizedArg}", x)
+            throw new CFoundryException(s"No fixture for sanitized argument ${sanitizedArg}", cause = x)
           } else {
             val lesson = askTeacher
             logger.info(s"Recording fixture response ${lesson} for sanitized argument ${sanitizedArg} due to ${x}")

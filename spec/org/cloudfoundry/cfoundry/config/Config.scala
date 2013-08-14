@@ -1,6 +1,7 @@
 package org.cloudfoundry.cfoundry.config
 
 import org.cloudfoundry.cfoundry.http.mock._
+import org.cloudfoundry.cfoundry.exceptions._
 
 object Config {
 
@@ -14,7 +15,7 @@ object Config {
     val v = System.getenv(k)
     if (v == null) {
       if (default.isEmpty) {
-        throw new RuntimeException(s"Missing environment variable ${k}")
+        throw new CFoundryException(s"Missing environment variable ${k}")
       } else {
         default.get
       }
@@ -28,7 +29,7 @@ object Config {
       case "test" => MockCRUD.TEST
       case "learn" => MockCRUD.LEARN
       case "observe" => MockCRUD.OBSERVE
-      case _ => throw new RuntimeException(s"Invalid test mode ${mode}")
+      case _ => throw new CFoundryException(s"Invalid test mode ${mode}")
     }
   }
 

@@ -8,10 +8,10 @@ abstract class Roles(resource: HasAppendages) extends Appendages[Roles.GUIDs](re
   protected def decode(payload: Chalice): Seq[String] = Seq() // TODO
   
   def <<(guids: String*) {
-    val a = if (data == null) Seq[String]() else data
-	update(a ++ guids)
+    val a = if (data == null) Seq() else data
+	set(a ++ guids)
   }
-  
+
 }
 
 object Roles {

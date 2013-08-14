@@ -1,13 +1,14 @@
-// DO NOT EDIT -- Automagically generated at 2013-08-01 10:25:09.982 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-08-14 14:31:48.273 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.resources.java_friendly
 import scala.collection.JavaConversions._
 trait ServiceAuthTokenJF {
-  def selectDynamic(noun: String): org.cloudfoundry.cfoundry.resources.Magic
+  def selectDynamic(noun: String): org.cloudfoundry.cfoundry.util.Chalice
   def updateDynamic(noun: String)(value: Any): Unit
-  def getLabel: java.lang.String = selectDynamic("label").prop.asInstanceOf[java.lang.String]
+  def getLabel: java.lang.String = selectDynamic("label").raw.asInstanceOf[java.lang.String]
   def setLabel(value: java.lang.String): Unit = updateDynamic("label")(value)
-  def getProvider: java.lang.String = selectDynamic("provider").prop.asInstanceOf[java.lang.String]
+  def getProvider: java.lang.String = selectDynamic("provider").raw.asInstanceOf[java.lang.String]
   def setProvider(value: java.lang.String): Unit = updateDynamic("provider")(value)
-  def getToken: java.lang.String = selectDynamic("token").prop.asInstanceOf[java.lang.String]
+  def getResourceUrl: java.lang.String = selectDynamic("resourceUrl").raw.asInstanceOf[java.lang.String]
+  def getToken: java.lang.String = selectDynamic("token").raw.asInstanceOf[java.lang.String]
   def setToken(value: java.lang.String): Unit = updateDynamic("token")(value)
 }

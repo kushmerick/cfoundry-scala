@@ -4,6 +4,7 @@ import java.io._
 import java.nio.charset._
 import org.apache.http._
 import org.apache.http.entity._
+import org.cloudfoundry.cfoundry.util._
 
 /* this functionality is only used for logging/debugging */
 
@@ -29,7 +30,5 @@ object Entity {
       new String(buf, 0, nread, charset) + ellipsis
     }
   }
-
-  lazy private val UTF8 = Charset.forName("UTF-8")
 
 }

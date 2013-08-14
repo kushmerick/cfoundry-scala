@@ -2,18 +2,22 @@ package org.cloudfoundry.cfoundry.resources.spec
 
 import org.scalatest.matchers._
 import org.scalatest.fixture._
-import org.cloudfoundry.cfoundry.scalatest._
+import org.cloudfoundry.cfoundry.client.mock.MockedClientFixture
 
-class SpacSpec extends FlatSpec with ShouldMatchers with MockedClientFixture with CRUDTests with EnumerationTests {
+class SpaceSpec extends FlatSpec with ShouldMatchers with MockedClientFixture with CRUDTests with EnumerationTests with ResourceFixture {
 
   override val login = true
 
   "Space" should "be CRUDable" in { client =>
-    testCRUD(client, "space", Map("organization" -> client.organizations(0)))
+    give an "organization" from client to { org =>
+      testCRUD(client, "space", Map("organization" -> org))
+    }
   }
 
   it should "be able to use a query to find itself" in { client =>
-    testEnumerationId(client, "space", client.spaces(0))
+    give a "space" from client to { space =>
+      testEnumerationId(client, "space", space)
+    }
   }
   
   it should "support 'depth'" in { client =>

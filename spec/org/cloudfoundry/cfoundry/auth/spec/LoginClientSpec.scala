@@ -1,7 +1,6 @@
 package org.cloudfoundry.cfoundry.client.spec
 
 import org.cloudfoundry.cfoundry._
-import org.cloudfoundry.cfoundry.scalatest._
 import org.cloudfoundry.cfoundry.client.mock._
 import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.config._
@@ -21,7 +20,7 @@ class LoginClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixt
     val token = client.loginClient.login(username, Config.cfPassword)
     client.loginClient.refresh(token) match {
       case Some(tok) => tok.decodedPayload("user_name").string should equal(username)
-      case None => throw new RuntimeException("refresh failed")
+      case None => throw new CFoundryException("refresh failed")
     }
   }
 

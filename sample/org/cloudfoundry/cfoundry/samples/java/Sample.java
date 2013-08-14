@@ -14,7 +14,6 @@ class Sample {
 
 		Client client = new Client(target, logger());
 
-		System.out.println("Authenticated as " + client.getCurrentUser());
 		System.out.println("CF version: " + client.getCloudfoundryVersion() + "; client version: " + client.getVersion());
 
 		client.login(username, password);
@@ -25,11 +24,6 @@ class Sample {
 			}
 		}
 		
-		// TODO: JF doesn't yet support constraints
-	    // String id = client.getOrganizations().get(0).getId();
-		// Organization org = client.getOrganizations(id)
-		// Console.println("Found organization " + org + " with id " + id)
-
 		for (Service service : client.getServices()) {
 			for (ServicePlan servicePlan : service.getServicePlans()) {
 				for (ServiceInstance serviceInstance : servicePlan.getServiceInstances()) {
@@ -39,20 +33,20 @@ class Sample {
 			}
 		}
 
-		Service service = client.getServices().get(0);
-		ServicePlan servicePlan = service.getServicePlans().get(0);
+		ServicePlan servicePlan = client.getServices().get(0).getServicePlans().get(0);
 		Space space = client.getSpaces().get(0);
 		ServiceInstance serviceInstance = servicePlan.newServiceInstance();
 		serviceInstance.setName("foobar");
 		serviceInstance.setSpace(space);
 		serviceInstance.setServicePlan(servicePlan);
 		serviceInstance.save();
+
+		serviceInstance.setName("foobar");
+		serviceInstance.save();
+		
 		serviceInstance.destroy();
 
-		space.setName("foobar");
-		space.save();
-
-	    client.logout();
+		client.logout();
 	}
 
 	static private Logger logger() {

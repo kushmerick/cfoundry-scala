@@ -1,7 +1,6 @@
 package org.cloudfoundry.cfoundry.client.spec
 
 import org.cloudfoundry.cfoundry._
-import org.cloudfoundry.cfoundry.scalatest._
 import org.cloudfoundry.cfoundry.client.mock._
 import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.config._
@@ -13,6 +12,7 @@ import org.cloudfoundry.cfoundry.util._
 import org.scalatest.fixture._
 import org.scalatest.matchers._
 import java.util.logging._
+import org.cloudfoundry.cfoundry.client.mock.MockedClientFixture
 
 class ClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
 

@@ -7,17 +7,56 @@ import java.io._
 
 class App(client: ClientContext) extends Resource(client) with HasAppendages with AppJF {
 
+  import App._
+
   property("description", applicable = false)
   hasA("space")
 
-  type Binary = Array[Byte]
-  class Bits extends Appendages[Binary](this) {
-    protected def encode: Chalice = null // TODO
-    protected def decode(payload: Chalice): Binary = Array[Byte]() // TODO
+  private val _bits = new Bits(this)
+  private var filename = "unknown.zip" // TODO: Err, umm, ....
+  def bits_=(__bits: Bytes, _filename: String = null) = {
+    _bits.set(__bits)
+    filename = _filename
   }
-  val bits = new Bits
+  def bits = _bits
   
-  // for "app.bits = foobar"
-  def bits_=(_bits: Binary) = bits() = _bits
+}
+
+object App {
+
+  type Bytes = Array[Byte]
+
+  class Bits(app: App) extends Appendages[Bytes](app) {
+
+    override protected def encode: Chalice = {
+      val payload: Array[Byte] = if (app.bits == null) Array() else app.bits
+      Chalice(payload)
+    }
+
+    override protected def decode(payload: Chalice): Bytes = {
+      payload.blob
+    }
+    
+    private def payload = {
+      Seq(
+        Map(
+          "name" -> "resources",
+          CT -> ctJSON,
+          "body" -> resources),
+        Map(
+          "name" -> "application",
+          CT -> ctZIP,
+          "body" -> Map(
+            "bits" -> app.bits,
+            "filename" -> app.filename))
+      )
+    }
   
+    private def resources = {
+      // TODO: https://github.com/cloudfoundry/cloud_controller_ng/blob/master/app/controllers/core/resource_matches_controller.rb
+      Seq.empty[String]
+    }
+
+  }
+
 }

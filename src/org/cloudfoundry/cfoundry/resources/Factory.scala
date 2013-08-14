@@ -12,7 +12,7 @@ class Factory(noun: String, context: ClientContext) extends ClassNameUtilities {
 
   lazy val plural = inflector.pluralize(noun)
 
-  private lazy val resourceClass: Class[_] = {
+  lazy val resourceClass: Class[_] = {
     getSiblingClass(inflector.capitalize(inflector.singularize(noun)))
   }
 
@@ -22,16 +22,26 @@ class Factory(noun: String, context: ClientContext) extends ClassNameUtilities {
 
   def create(info: Chalice): Resource = {
     val id = info("metadata")("guid").string
-    val cache = context.getCache
-    val resource: Resource =
-      if (cache.contains(id)) {
-        context.getLogger.fine(s"Retrieving resource ${id} from cache")
-        cache.get(id)
-      } else {
-        create
-      }
+    val resource = checkCache(id)
     resource.fromInfo(info)
+    resource.clean
     resource
+  }
+  
+  private def checkCache(id: String) = {
+    val cache = context.getCache
+    val cached = cache.contains(id)
+    lazy val rcached = cache.get(id) 
+    lazy val dirty = rcached.isDirty
+    if (cached && !dirty) {
+      context.getLogger.fine(s"Retrieving resource ${id} from cache")
+      rcached
+    } else {
+      if (cached) {
+        cache.eject(rcached)
+      }
+  	  create
+    }
   }
 
 }

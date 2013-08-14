@@ -8,7 +8,6 @@ import java.io._
 class Fixture extends HashMap[String, Fixture.Node] {
 
   import Fixture._
-  import Fixtures._
 
   var dirty = false
 

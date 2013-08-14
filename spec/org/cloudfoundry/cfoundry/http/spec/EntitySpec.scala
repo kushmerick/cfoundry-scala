@@ -35,7 +35,7 @@ class EntitySpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   }
   
   def testResponse(maxLength: Int, payload: String, excerpt: String) = {
-    val response = new MockHttpResponse(bytes = payload.getBytes)
+    val response = new MockHttpResponse(bytes = payload.getBytes(UTF8))
     Entity.excerpt(response, maxLength) should equal(excerpt)
   }
   

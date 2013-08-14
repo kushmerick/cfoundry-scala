@@ -1,20 +1,20 @@
 package org.cloudfoundry.cfoundry.util
 
-import org.cloudfoundry.cfoundry.util._
-import org.cloudfoundry.cfoundry.http._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.exceptions._
 import java.io._
 import org.apache.commons.codec.binary._
 
 /*
- * Chalice is a _m_a_g_i_c_a_l_ container/wrapper around either:
- *  o  a JSON-style object: a string, number, array of Chalices, or map
- *     from strings to Chalices. For example:
- *       val j = "{\"X\": [10,20,{\"Y\":\"Z\"}}"
+ * Chalice is a _m_a_g_i_c_a_l_ container/wrapper around:
+ *  -  a JSON-style object: a string, number, boolean, url, sequence
+ *     of Chalices, or map from strings to Chalices.  For example:
+ *       val j = """{"X": [10,20,{"Y":"Z"}}"""
  *       val c = new Chalice(JSON.deserialize(new StringInputStream(j)))
- *     c("X")(2)("Y").string // "Z"
- *  o a 'blob' (byte array)
+ *       c("X")(2)("Y").string // "Z"
+ *  -  a Resource
+ *  -  a sequence of Resources
+ *  -  a 'blob' (byte array)
  */
 
 class Chalice(val _obj: Any) {
@@ -110,16 +110,24 @@ class Chalice(val _obj: Any) {
   }
 
   //// resource
+  
+  type R = Resource
 
-  lazy val isResource = obj.isInstanceOf[Resource]
+  lazy val isResource = obj.isInstanceOf[R]
 
-  lazy val resource = asA[Resource]
+  lazy val resource = asA[R]
+  
+  //// resources -- bit subtle/tricky: c.isResources ==> c.isSeq, but c.isSeq =/=> c.isResources
+  
+  lazy val isResources = isSeq && seq.forall { _.isResource }
+  
+  lazy val resources = _seq.asInstanceOf[Seq[R]]
 
   //// values
 
   lazy val isDouble = obj.isInstanceOf[Double] || obj.isInstanceOf[Int]
 
-  lazy val double: java.lang.Double = try {
+  lazy val double: Double = try {
     asA[Double]
   } catch {
     case x: Exception => try {
@@ -148,6 +156,12 @@ class Chalice(val _obj: Any) {
   }
 
   lazy val isNull = obj == null
+  
+  //// url (just an alias for string, no syntax checking or conversion to/from a URI object)
+  
+  lazy val isUrl = isString
+  
+  lazy val url = string
 
   //// blob
 
@@ -159,7 +173,7 @@ class Chalice(val _obj: Any) {
     if (isBlob) {
       asA[B]
     } else if (isString) {
-      string.getBytes
+      string.getBytes(UTF8)
     } else if (isNull) {
       null
     } else {
@@ -208,5 +222,8 @@ object Chalice {
 
   def apply(x: Any) = new Chalice(x)
   val b64 = new Base64
+  
+  def dechaliceify(chalice: Chalice) =
+    JSON.deserialize(new ByteArrayInputStream(JSON.serialize(chalice).getBytes(UTF8)))
 
 }

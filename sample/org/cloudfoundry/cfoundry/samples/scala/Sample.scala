@@ -8,52 +8,40 @@ import java.util.logging._
 object Sample extends scala.App {
 
   val (target, username, password) = arguments
+  
   val client = new Client(target, logger)
 
   client.login(username, password)
-
+  
   Console.println(s"CF version: ${client.cloudfoundryVersion.int}; client version = ${client.version.string}")
-
-  for (org <- client.organizations) {
-    for (space <- org.spaces) {
+  
+  for (org <- client.organizations.resources) {
+    for (space <- org.spaces.resources) {
       Console.println(s"Org ${org} has space ${space}")
     }
   }
   
-  val id = client.organizations(0).id
-  val org = client.organizations(id).resource
-  Console.println(s"Found organization ${org} with id ${id}")
-
   for (
-    service <- client.services;
-    servicePlan <- service.servicePlans;
+    service <- client.services.resources;
+    servicePlan <- service.servicePlans.resources;
     serviceInstance <- servicePlan.serviceInstances
   ) {
     Console.println(s"Service ${service} has plan ${servicePlan} with instance ${serviceInstance}")
   }
 
-  val service: Resource = client.services(0)
-  val servicePlan: Resource = service.servicePlans(0)
-  val space: Resource = client.spaces(0)
+  val servicePlan: Resource = client.servicePlans(first = true)
+  val space: Resource = client.spaces(first = true)
   val serviceInstance: Resource = servicePlan.serviceInstance
   serviceInstance.name = "foobar"
   serviceInstance.space = space
   serviceInstance.servicePlan = servicePlan
   serviceInstance.save
+  
+  serviceInstance.name = "foobaz"
+  serviceInstance.save
+  
   serviceInstance.destroy
-  
-  space.name = "foobar"
-  space.save
 
-  /* TODO!
-   * 
-   val org = client.organizations(0)
-  val user = client.user
-  user.username = "joe@example.com"
-  user.save
-  org.members << 
-*/
-  
   client.logout
 
   private def arguments = {

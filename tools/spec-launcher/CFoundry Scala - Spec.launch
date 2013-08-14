@@ -2,20 +2,20 @@
 <launchConfiguration type="scala.scalatest">
 <stringAttribute key="SCALATEST_LAUNCH_INCLUDE_NESTED" value="true"/>
 <setAttribute key="SCALATEST_LAUNCH_TESTS_NAME"/>
-<stringAttribute key="SCALATEST_LAUNCH_TYPE" value="PACKAGE"/>
+<stringAttribute key="SCALATEST_LAUNCH_TYPE" value="SUITE"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/cfoundry-scala"/>
+<listEntry value="/cfoundry-scala/spec/org/cloudfoundry/cfoundry/suite/Suite.scala"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
-<listEntry value="4"/>
+<listEntry value="1"/>
 </listAttribute>
 <mapAttribute key="org.eclipse.debug.core.environmentVariables">
 <mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures/crud"/>
 <mapEntry key="CFPASSWORD" value="${cfpassword}"/>
-<mapEntry key="CFTARGET" value="https://api.run.pivotal.io"/>
+<mapEntry key="CFTARGET" value="${cftarget}"/>
 <mapEntry key="CFTESTMODE" value="learn"/>
 <mapEntry key="CFUSERNAME" value="${cfusername}"/>
 </mapAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.cloudfoundry.cfoundry"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.cloudfoundry.cfoundry.suite.Suite"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="cfoundry-scala"/>
 </launchConfiguration>

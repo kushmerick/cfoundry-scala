@@ -43,7 +43,7 @@ object JSON {
   }
 
   def deserialize(stream: InputStream) = try {
-    var json = new java.util.Scanner(stream, "UTF-8").useDelimiter("\\A").next
+    var json = new java.util.Scanner(stream, utf8).useDelimiter("\\A").next
     scala.util.parsing.json.JSON.parseFull(json).get
   } catch {
     case x: Exception => throw new BadJSON(x)

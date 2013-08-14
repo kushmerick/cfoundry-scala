@@ -9,6 +9,7 @@ class Service(client: ClientContext) extends Resource(client) with ServiceJF {
   property("provider")
   property("version")
   property("active", typ = "bool")
+  property("gatewayUrl", typ = "url", source = "url") // ugghh: a service has two fields called "url"
   hasMany("servicePlan")
 
 }

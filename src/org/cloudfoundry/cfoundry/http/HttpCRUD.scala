@@ -1,16 +1,17 @@
 package org.cloudfoundry.cfoundry.http
 
-import java.io._
-import java.net._
-import java.util.logging._
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.exceptions._
 import org.cloudfoundry.cfoundry.http.util._
+import java.net._
+import java.util.logging._
 import org.apache.http._
 import org.apache.http.client._
 import org.apache.http.impl.client._
 import org.apache.http.client.methods._
 import org.apache.http.entity._
+import org.apache.http.entity.mime._
+import org.apache.http.entity.mime.content._
 
 class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_endpoint, _logger) {
   
@@ -50,9 +51,10 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     trace(response)
     Response(response)
   } catch {
-    case x: Exception =>
+    case x: Exception => {
       request.abort
       throw new HTTPFailure(x)
+    }      
   } finally {
     request.reset
   }
@@ -89,11 +91,32 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
   }
 
   private def setPayload(request: HttpEntityEnclosingRequest, payload: Option[Chalice]) = {
-    payload match {
-      case Some(payload) => request.setEntity(new ByteArrayEntity(payload.blob))
-      case None =>
+    if (payload.isDefined) {
+      request.setEntity(makeEntity(payload.get))
     }
     request
+  }
+  
+  private def makeEntity(payload: Chalice) = {
+    if (payload.isSeq) {
+      val e = new MultipartEntity 
+      payload.seq.foreach(part => {
+        e.addPart(part("name").string, contentBody(part(CT).string, part("body")))
+      })
+      e
+    } else {
+      new ByteArrayEntity(payload.blob)
+    }
+  }
+
+  private def contentBody(contentType: String, body: Chalice) = {
+    if (contentType == ctZIP) {
+      new ByteArrayBody(body("bytes").blob, ctZIP, body("filename").string)
+    } else if (contentType == ctJSON) {
+      new StringBody(JSON.serialize(body("data")), ctJSON, UTF8)
+    } else {
+      throw new UnknownContentType(contentType)
+    }
   }
 
   /////////////////////

@@ -4,6 +4,7 @@ import java.io.{ Console => _, _ }
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.client._
+import org.cloudfoundry.cfoundry.exceptions._
 
 object Generate extends scala.App with ClassNameUtilities {
 
@@ -52,12 +53,12 @@ object Generate extends scala.App with ClassNameUtilities {
       // enumerate & create children
       for (childrenName <- resource.getChildren) {
         val childClassName = getResourceClassName(inflector.singularize(inflector.capitalize(childrenName)))
-        methods += makeGetter(childrenName, getListResourceClassName(childClassName), getSeqResourceClassName(childClassName), Magic.RESOURCES)
+        methods += makeGetter(childrenName, getListResourceClassName(childClassName), getSeqResourceClassName(childClassName), "resources")
         methods += makeCreator(inflector.singularize(childrenName), childClassName)
       }
       writeMethods(resourceClass, methods.result)
     } else {
-      throw new RuntimeException(s"${resourceClassName} is not a Resource")
+      throw new CFoundryException(s"${resourceClassName} is not a Resource")
     }
   } catch {
     case x: Exception => {
@@ -69,17 +70,17 @@ object Generate extends scala.App with ClassNameUtilities {
   def makeMethods(resource: Resource, property: Property): Seq[String] = {
     val methods = new scala.collection.mutable.ArrayBuilder.ofRef[String]
     // getter
-    val (returnType, actualType, deMagicifier) =
+    val (returnType, actualType, wand) =
       if (resource.hasParent(property.name) || resource.hasChildren(property.name)) {
         val returnType = getPropertyClassName(property)
-        (returnType, returnType, Magic.RESOURCE)
+        (returnType, returnType, "resource")
       } else if (resource.hasChildren(inflector.singularize(property.name))) {
-        (getListPropertyClassName(property), getSeqPropertyClassName(property), Magic.RESOURCES)
+        (getListPropertyClassName(property), getSeqPropertyClassName(property), "resources")
       } else {
         val returnType = getChaliceTypeName(property.typ)
-        (returnType, returnType, Magic.PROP)
+        (returnType, returnType, "raw")
       }
-    methods += makeGetter(property.name, returnType, actualType, deMagicifier)
+    methods += makeGetter(property.name, returnType, actualType, wand)
     // setter
     if (!property.readOnly) {
       val valueType =
@@ -121,8 +122,8 @@ object Generate extends scala.App with ClassNameUtilities {
     collectionClass.getName + "[" + className + "]"
   }
 
-  def makeGetter(name: String, returnType: String, actualType: String, deMagicifier: String) = {
-    "def get" + inflector.capitalize(inflector.underlineToCamel(name)) + ": " + returnType + " = selectDynamic(\"" + name + "\")." + deMagicifier + ".asInstanceOf[" + actualType + "]"
+  def makeGetter(name: String, returnType: String, actualType: String, wand: String) = {
+    "def get" + inflector.capitalize(inflector.underlineToCamel(name)) + ": " + returnType + " = selectDynamic(\"" + name + "\")." + wand + ".asInstanceOf[" + actualType + "]"
   }
 
   def makeSetter(name: String, valueType: String) = {
@@ -167,7 +168,7 @@ object Generate extends scala.App with ClassNameUtilities {
       s"package ${packageName}\n" +
       s"import scala.collection.JavaConversions._\n" +
       s"trait ${className}JF {\n" +
-      "  def selectDynamic(noun: String): org.cloudfoundry.cfoundry.resources.Magic\n" +
+      "  def selectDynamic(noun: String): org.cloudfoundry.cfoundry.util.Chalice\n" +
       "  def updateDynamic(noun: String)(value: Any): Unit"
   }
 

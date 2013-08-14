@@ -1,4 +1,4 @@
-package org.cloudfoundry.cfoundry.scalatest
+package org.cloudfoundry.cfoundry.client.mock
 
 import org.scalatest.fixture.Suite
 import org.scalatest.BeforeAndAfter
@@ -7,18 +7,16 @@ import org.cloudfoundry.cfoundry.config._
 import java.util.logging._
 
 trait MockedClientFixture extends Suite with BeforeAndAfter {
-  
+
   private var client: MockedClient = null
 
-  private val logger = Logger.getGlobal
-  logger.setLevel(Level.FINEST)
-  
   protected val login = false
+
   protected def customBefore = {}
   protected def customAfter = {}
   
   before {
-    client = new MockedClient(logger)
+    client = new MockedClient(Logger.getGlobal())
     client.startup
     client.beginTest(s"before-${suiteName}")
     if (login) client.login(Config.cfUsername, Config.cfPassword)

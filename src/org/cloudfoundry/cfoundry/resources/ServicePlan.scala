@@ -5,6 +5,9 @@ import org.cloudfoundry.cfoundry.client._
 
 class ServicePlan(client: ClientContext) extends Resource(client) with ServicePlanJF {
 
+  property("free", typ="bool")
+  property("public", typ="bool", default = Some(true))
+
   hasA("service")
   hasMany("serviceInstance")
 

@@ -21,8 +21,8 @@ class Space(client: ClientContext) extends Resource(client) with HasAppendages w
   val auditors = new Auditors
 
   // for "space.managers = foobar" etc
-  def managers_=(_managers: Roles.GUIDs) = managers() = _managers
-  def developers_=(_developers: Roles.GUIDs) = developers() = _developers
-  def auditors_=(_auditors: Roles.GUIDs) = auditors() = _auditors
+  def managers_=(_managers: Roles.GUIDs) = managers.set(_managers)
+  def developers_=(_developers: Roles.GUIDs) = developers.set(_developers)
+  def auditors_=(_auditors: Roles.GUIDs) = auditors.set(_auditors)
 
 }

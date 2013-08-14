@@ -1,7 +1,11 @@
 package org.cloudfoundry.cfoundry.exceptions
 
-class MultipleCauses(causes: Exception*)
-  extends CFoundryException(message = MultipleCauses.message(causes))
+class MultipleCauses(causes: List[Exception])
+  extends CFoundryException(message = MultipleCauses.message(causes)) {
+
+  def this(causes: Exception*) = this(causes.toList)
+
+}
 
 private object MultipleCauses {
 
