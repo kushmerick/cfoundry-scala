@@ -23,9 +23,17 @@ class Pairs(val pairs: Map[String, String]) {
 object Pairs {
 
   private type SS = (String, String)
-  def apply(pairs: SS*): Pairs = Pairs(pairs.toMap)
-  private def apply(pairs: Iterable[SS]) = new Pairs(pairs.toMap)
 
+  def apply(pairs: SS*): Pairs = Pairs(pairs.toMap)
+
+  private def apply(pairs: Iterable[SS]) = new Pairs(pairs.toMap)
+  
+  def merge(pairs: Iterable[Pairs])= new Pairs(
+    pairs.
+      map(_.pairs.toMap).
+      reduce((p,q) => p++q)
+  )
+  
   def formDecode(encoded: String) = {
     Pairs(
       encoded

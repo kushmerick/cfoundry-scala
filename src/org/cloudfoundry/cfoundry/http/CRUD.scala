@@ -30,6 +30,10 @@ abstract class CRUD(var endpoint: String, val logger: Logger = null) {
   }
   def cruD(path: Path, headers: Option[Pairs]): Response
   
+  //// custom headers
+  
+  var customHeaders = Pairs()
+  
   //// path components
 
   def makePath(path: Path) = {

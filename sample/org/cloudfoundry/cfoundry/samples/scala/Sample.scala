@@ -15,6 +15,8 @@ object Sample extends scala.App {
   
   Console.println(s"CF version: ${client.cloudfoundryVersion.int}; client version = ${client.version.string}")
   
+  client.customHeaders = Pairs("X-vCHS-vDC-Id" -> "foo123")
+  
   for (org <- client.organizations.resources) {
     for (space <- org.spaces.resources) {
       Console.println(s"Org ${org} has space ${space}")

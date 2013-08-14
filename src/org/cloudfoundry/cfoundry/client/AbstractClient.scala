@@ -136,6 +136,12 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   private val LOGIN_ENDPOINT = "authorization_endpoint"
   lazy val loginClient: LoginClient[TCRUD] =
     new LoginClient[TCRUD](crudFactory, discoverEndpoint(LOGIN_ENDPOINT), logger)
+    
+  //// custom headers
+    
+  def customHeaders = getCrud.customHeaders
+  def customHeaders_=(headers: Pairs) = getCrud.customHeaders = headers
+  def clearCustomHeaders = getCrud.customHeaders = Pairs()
 
   //// just for debugging
 

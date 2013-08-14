@@ -16,7 +16,7 @@ class Sample {
 
 		System.out.println("CF version: " + client.getCloudfoundryVersion() + "; client version: " + client.getVersion());
 
-		client.login(username, password);
+	    client.login(username, password);
 
 		for (Organization org : client.getOrganizations()) {
 			for (Space space : org.getSpaces()) {

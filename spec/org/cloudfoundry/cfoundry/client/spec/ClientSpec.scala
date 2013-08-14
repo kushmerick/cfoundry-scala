@@ -74,5 +74,22 @@ class ClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
     client.organizations
     refreshed should be(true)
   }
+  
+  it should "support custom headers" in { client =>
+    val crud = new MockHttpCRUD
+    client.setCrud(crud)
+    client.customHeaders = Pairs("X-Foo" -> "bar")
+    val headers = client.customHeaders.pairs
+    headers.size should equal(1)
+    headers("X-Foo") should equal("bar")
+    crud.cRud(Left("/foo"))(None)
+    var headers2 = crud.lastRequest.getHeaders("X-Foo")
+    headers2.length should equal(1)
+    headers2(0).getValue should equal("bar")
+    client.clearCustomHeaders
+    crud.cRud(Left("/foo"))(None)
+    headers2 = crud.lastRequest.getHeaders("X-Foo")
+    headers2.length should equal(0)
+  }
 
 }

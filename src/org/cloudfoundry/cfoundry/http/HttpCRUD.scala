@@ -45,7 +45,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     
   private val excerptLength = 4096
 
-  private def execute(request: HttpRequestBase): Response = try {
+  protected def execute(request: HttpRequestBase): Response = try {
     trace(request)
     val response = new ExcerptableHttpResponse(httpClient.execute(request), excerptLength)
     trace(response)
@@ -62,7 +62,7 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
   private def makeRequest[T <: HttpRequestBase](classs: Class[T], path: Path, headers: Option[Pairs]): HttpRequestBase = {
     val request = classs.newInstance
     request.setURI(new URI(endpoint + makePath(path)))
-    addHeaders(request, headers)
+    addHeaders(request, headers, Some(customHeaders))
     request
   }
 
@@ -74,14 +74,14 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
 
   /////////////////////
 
-  private def addHeaders(request: HttpRequest, headers: Option[Pairs]): Unit = {
-    var opts =
-      HttpCRUD.STANDARD_HEADERS ++
-        (headers match {
-          case Some(x) => x
-          case None => Pairs()
-        })
-    addHeaders(request, opts)
+  private def addHeaders(request: HttpRequest, headerSets: Option[Pairs]*): Unit = {
+    val headers = Pairs.merge(
+      headerSets.map(_ match {
+        case Some(x) => x
+        case None => Pairs()
+      })
+    )
+    addHeaders(request, HttpCRUD.STANDARD_HEADERS ++ headers)
   }
 
   private def addHeaders(request: HttpRequest, headers: Pairs) = {

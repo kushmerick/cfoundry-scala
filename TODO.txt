@@ -1,8 +1,6 @@
 - support for dependencies that hang off resources: app bits & files,
   and user roles [IN PROGRESS]
 
-- support for custom HTP request headers
-
 - set up automatic CI (eg Travis)
 
 - use www.scala-sbt.org
