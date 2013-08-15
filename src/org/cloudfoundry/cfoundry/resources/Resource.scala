@@ -597,10 +597,11 @@ abstract class Resource(@BeanProperty var context: ClientContext)
     cache.eject(this)
   }
 
-  def options = {
-    Some(Pairs(
-      "Authorization" -> token.authHeader))
-  }
+  def options = Some(
+    Pairs(
+      AUTH -> token.authHeader
+    )
+  )
 
   protected def performAndReload(performer: () => Response) = {
     // TODO: I think this is wrong.  fromInfo expects a single 'resource'

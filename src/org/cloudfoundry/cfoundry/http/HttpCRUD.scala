@@ -159,12 +159,8 @@ object HttpCRUD {
 
   def factory(endpoint: String, logger: Logger) = new HttpCRUD(endpoint, logger)
 
-  val FORM_ENCODED = "application/x-www-form-urlencoded"
-
-  private val JSON = "application/json"
-
   private val STANDARD_HEADERS = Pairs(
-    "Content-Type" -> JSON,
-    "Accept" -> JSON)
+    CT -> ctJSON,
+    ACCEPT -> ctJSON)
 
 }

@@ -13,7 +13,11 @@ package object util {
   val UTF8 = Charset.forName(utf8)
   
   val CT = "Content-Type"
+  val ACCEPT = "Accept"
+  val AUTH = "Authorization"
+    
   val ctJSON = "application/json"
-  val ctZIP = "application/zip"
+  val ctZIP  = "application/zip"
+  val ctFORM = "application/x-www-form-urlencoded"
 
 }

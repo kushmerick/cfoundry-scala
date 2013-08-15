@@ -41,9 +41,12 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
     }      
   }
 
-  private lazy val LOGIN_OPTIONS = Some(Pairs(
-    "Content-Type" -> HttpCRUD.FORM_ENCODED,
-    "Authorization" -> "Basic Y2Y6")) // TODO: b64("cf:") = Y2Y6, but -- err, umm, ... Huh?!?!
+  private lazy val LOGIN_OPTIONS = Some(
+    Pairs(
+      CT -> ctFORM,
+      AUTH -> "Basic Y2Y6" // TODO: b64("cf:") = Y2Y6, but -- err, umm, ... Huh?!?!
+    )
+  )
 
   // Warning: The following alleged SSO support is a ridiculous hack that doesn't work.
     
