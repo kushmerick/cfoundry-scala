@@ -23,7 +23,11 @@ class ClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
   it should "know its description" in { client =>
     client.description.string should equal(AbstractClient.description)
   }
-  
+
+  it should "know its url" in { client =>
+    client.url.string should equal(AbstractClient.repo)
+  }
+
   it should "know its target" in { client =>
     client.target.string should equal(Config.cfTarget)
   }
@@ -38,12 +42,6 @@ class ClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
   }
 
   it should "not have a id" in { client =>
-    intercept[InvalidProperty] {
-      client.id
-    }
-  }
-
-  it should "not have a url" in { client =>
     intercept[InvalidProperty] {
       client.id
     }

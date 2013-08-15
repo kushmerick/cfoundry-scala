@@ -34,9 +34,9 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   property("version", default = Some(Version.version), readOnly = true)
   property("cloudfoundryVersion", typ = "int", default = lazyCloudfoundryVersion, readOnly = true)
   property("currentUser", typ = "resource", default = lazyCurrentUser, readOnly = true, recursive = true) 
+  property("url", default = Some(repo))
 
   property("id", applicable = false) // TODO: Resource assumes everything has an id?!
-  property("url", applicable = false)
 
   //// every resource is a child of the client.  rather than register them all ahead
   //// of time, we do so on demand as they are requested.
@@ -153,5 +153,6 @@ object AbstractClient {
 
   val name = "cfoundry-scala"
   val description = "A Scala client for Cloud Foundry"
+  val repo = "https://github.com/kushmerick/cfoundry-scala"
 
 }
