@@ -3,6 +3,11 @@
 
 - set up automatic CI (eg Travis)
 
+- write another sample: implement a simple 'echo' service in scala using
+  cfoundry-scala to advertise with CF etc.  this would be both a good
+  sample, but also solid proof that the parts of the API related to
+  services are well covered.
+
 - use www.scala-sbt.org
 
 - tests should know whether they required admin or not (e.g. create
