@@ -2,11 +2,15 @@ package org.cloudfoundry.cfoundry.samples.java;
 
 import org.cloudfoundry.cfoundry.client.*;
 import org.cloudfoundry.cfoundry.resources.*;
+import org.cloudfoundry.cfoundry.config.*;
+
+import java.io.*;
+import java.nio.file.*;
 import java.util.logging.*;
 
 class Sample {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		String target = args[0];
 		String username = args[1];
@@ -40,11 +44,18 @@ class Sample {
 		serviceInstance.setSpace(space);
 		serviceInstance.setServicePlan(servicePlan);
 		serviceInstance.save();
-
-		serviceInstance.setName("foobar");
+		serviceInstance.setName("foobaz");
 		serviceInstance.save();
-		
 		serviceInstance.destroy();
+
+		App app = client.newApp();
+		app.setName("blah");
+		app.setSpace(space);
+		String zip = "app.zip";
+	    byte[] bits = Files.readAllBytes(Paths.get(Config.cfFixtures(), zip));
+		app.getBits().set(zip, bits);
+        app.save();
+        app.destroy();
 
 		client.logout();
 	}

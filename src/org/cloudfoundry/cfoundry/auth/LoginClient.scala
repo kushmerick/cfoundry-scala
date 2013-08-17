@@ -33,7 +33,7 @@ class LoginClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TCRUD, endpoin
   
   private def getToken(grantType: String, content: Pairs) = {
     val payload = Chalice((Pairs("grant_type" -> grantType) ++ content).formEncode)
-    val response = crud.Crud("/oauth/token")(LOGIN_OPTIONS)(Some(payload))
+    val response = crud.Crud("/oauth/token")(LOGIN_OPTIONS)(Some(payload), ctJSON)
     if (response.ok) {
       Left(new Token(response.payload))
     } else {

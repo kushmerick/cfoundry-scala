@@ -15,20 +15,25 @@ object Entity {
   def excerpt(response: HttpResponse, maxLength: Int): String = excerpt(response.getEntity, maxLength)
 
   private def excerpt(entity: HttpEntity, maxLength: Int): String = {
-    val istream = entity.getContent
-
-    istream.mark(maxLength)
-    val buf = new Array[Byte](maxLength)
-    val nread = istream.read(buf)
-    istream.reset
-    if (nread < 1) {
-      ""
-    } else {
-      var charset = ContentType.getOrDefault(entity).getCharset
-      if (charset == null) charset = UTF8 // sometimes "getOrDefault" doesn't
-      val ellipsis = if (nread == maxLength) "..." else ""
-      new String(buf, 0, nread, charset) + ellipsis
+    try {
+      // read directly from the entity's stream
+      val buf = new Array[Byte](maxLength)
+      val istream = entity.getContent
+      istream.mark(buf.length)
+      val nread = istream.read(buf)
+      istream.reset
+      if (nread < 1) {
+        "<empty entity>"
+      } else {
+        for (i <- 0 until nread) if (buf(i) < ' ' || buf(i) > '~') buf(i) = '.' // ensure blobs are printable
+        val ellipsis = if (nread == maxLength) "..." else ""
+        new String(buf, 0, nread) + ellipsis
+      }
+    } catch {
+      case x: UnsupportedOperationException =>
+        // some entities (eg, multi-part) aren't don't provide access
+        // to a content stream. TODO: Something better...
+        s"<unreadable entity: ${x}>"
     }
   }
-
 }

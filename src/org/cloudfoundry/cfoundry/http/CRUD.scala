@@ -9,21 +9,24 @@ abstract class CRUD(var endpoint: String, val logger: Logger = null) {
   import CRUD._
 
   //// the four operations
+  
+  type Payload = Pair[Option[Chalice], String] // payload, content-type
+  private val EMPTY = Pair(None,null)
 
-  def Crud(path: PathComponent*)(headers: Option[Pairs] = None)(payload: Option[Chalice] = None): Response = {
+  def Crud(path: PathComponent*)(headers: Option[Pairs] = None)(payload: Payload = EMPTY): Response = {
     Crud(path, headers, payload)
   }
-  def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response
+  def Crud(path: Path, headers: Option[Pairs], payload: Payload): Response
 
   def cRud(path: PathComponent*)(headers: Option[Pairs] = None): Response = {
     cRud(path, headers)
   }
   def cRud(path: Path, headers: Option[Pairs]): Response
 
-  def crUd(path: PathComponent*)(headers: Option[Pairs] = None)(payload: Option[Chalice] = None): Response = {
+  def crUd(path: PathComponent*)(headers: Option[Pairs] = None)(payload: Payload = EMPTY): Response = {
     crUd(path, headers, payload)
   }
-  def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response
+  def crUd(path: Path, headers: Option[Pairs], payload: Payload): Response
 
   def cruD(path: PathComponent*)(headers: Option[Pairs] = None): Response = {
     cruD(path, headers)

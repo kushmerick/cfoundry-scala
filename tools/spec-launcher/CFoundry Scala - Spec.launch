@@ -10,7 +10,7 @@
 <listEntry value="1"/>
 </listAttribute>
 <mapAttribute key="org.eclipse.debug.core.environmentVariables">
-<mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures/crud"/>
+<mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures"/>
 <mapEntry key="CFPASSWORD" value="${cfpassword}"/>
 <mapEntry key="CFTARGET" value="${cftarget}"/>
 <mapEntry key="CFTESTMODE" value="learn"/>

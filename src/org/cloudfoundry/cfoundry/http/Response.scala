@@ -33,10 +33,16 @@ class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
 
   // just for spec; dual of 'unpack'
   def pack = {
-    if (hasPayload && payload.isBlob) throw new NotPackable
     val packed = new HashMap[String, Any]
     if (hasCode) packed += CODE -> code.get
-    if (hasPayload) packed += PAYLOAD -> payload
+    if (hasPayload) {
+      packed += (if (payload.isBlob) {
+    	  BLOB -> B64.encodeAsString(payload.blob)
+        } else {
+          PAYLOAD -> payload
+        }
+      )
+    }
     Chalice(packed)
   }
   
@@ -58,14 +64,11 @@ object Response {
     val entity = r.getEntity
     val payload =
       if (entity != null) {
-        var istream: InputStream = null
         try {
-          val decoder = getDecoder(entity.getContentType.getValue)
-          Some(Chalice(decoder(entity)))
+          val decode = getDecoder(entity.getContentType.getValue)
+          Some(Chalice(decode(entity)))
         } catch {
           case x: Exception => throw new InvalidResponse(code, x)
-        } finally {
-          if (istream != null) istream.close
         }
       } else {
         None
@@ -85,6 +88,8 @@ object Response {
     val payload =
       if (packed.contains(PAYLOAD)) {
         Some(packed(PAYLOAD))
+      } else if (packed.contains(BLOB)) {
+        Some(Chalice(B64.decode(packed(BLOB).string)))
       } else {
         None
       }
@@ -93,6 +98,7 @@ object Response {
 
   private val CODE = "code"
   private val PAYLOAD = "payload"
+  private val BLOB = "blob"
     
   private def getDecoder(contentType: String) = {
     val sc = contentType.indexOf(';')
@@ -104,20 +110,39 @@ object Response {
   }
     
   private val DECODERS = Map(
-    "application/json" -> ((entity: HttpEntity) => JSON.deserialize(entity.getContent))
+    "application/json" -> jsonDecoder _
   )
   
-  private def blobDecoder(entity: HttpEntity) = {
-	val N = 4096
-    val blob = new ByteArrayOutputStream(N<<2)
-    val buf = Array.fill[Byte](N)(0)
+  // just some SWAGs....
+  private val ENTITY_SIZE_GUESS = 2 << 20
+  private val ENTITY_BUF_SIZE = 2 << 18
+  
+  private def asBytes(entity: HttpEntity) = {
+	var N = entity.getContentLength.intValue // TODO: Huge payloads?!
+	if (N < 0) N = ENTITY_SIZE_GUESS
+    val blob = new ByteArrayOutputStream(N)
+    val buf = Array.fill[Byte](Math.min(N,ENTITY_BUF_SIZE))(0)
     val istream = entity.getContent
     var n = 1
     while (n > 0) {
       n = istream.read(buf, 0, buf.size) 
       if (n > 0) blob.write(buf, 0, n)
     }
-    blob.toByteArray
+	blob.toByteArray
+  }
+  
+  private def jsonDecoder(entity: HttpEntity) = try {
+    val bytes = asBytes(entity)
+    try {
+      JSON.deserialize(new ByteArrayInputStream(bytes))
+    } catch {
+      // TODO: Hack/workaround for https://github.com/cloudfoundry/cloud_controller_ng/issues/79
+      case x: Exception => bytes
+    }
+  }
+  
+  private def blobDecoder(entity: HttpEntity) = {
+	asBytes(entity)
   } 
 
 }

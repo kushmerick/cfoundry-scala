@@ -57,7 +57,8 @@ trait ResourceFixture {
     }
     val exceptions = List[Exception](setupException, blockException, teardownException).filterNot(_ == null)
     if (exceptions.nonEmpty) {
-      throw new CFoundryException(s"Exception with '${noun}' fixture", cause = new MultipleCauses(exceptions))
+      val cause = if (exceptions.size == 1) exceptions(0) else new MultipleCauses(exceptions)
+      throw new CFoundryException(s"Exception with '${noun}' fixture", cause = cause)
     }
   }
 

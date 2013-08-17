@@ -1,5 +1,4 @@
-- support for dependencies that hang off resources: app bits & files,
-  and user roles [IN PROGRESS]
+- user roles [IN PROGRESS]
 
 - set up automatic CI (eg Travis)
 
@@ -7,6 +6,12 @@
   cfoundry-scala to advertise with CF etc.  this would be both a good
   sample, but also solid proof that the parts of the API related to
   services are well covered.
+  
+- CF sends resource properties in 2 sections: metadata and entity.  we
+  don't really distinguish between them (properties have a 'metadata' flag,
+  but it isn't very useful).  this gap is generally OK -- though it was
+  a hassle to implement service's "url": there are two url properties,
+  one in "metadata" as usual for all resources, and another in "entity".
 
 - use www.scala-sbt.org
 

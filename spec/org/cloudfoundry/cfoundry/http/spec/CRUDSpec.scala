@@ -11,9 +11,9 @@ class CRUDSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
   import CRUD._
   
   class MinimalCRUD(_endpoint: String) extends CRUD(_endpoint, null) {
-    override def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = null
+    override def Crud(path: Path, headers: Option[Pairs], payload: Payload) = null
     override def cRud(path: Path, headers: Option[Pairs]) = null
-    override def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]) = null
+    override def crUd(path: Path, headers: Option[Pairs], payload: Payload) = null
     override def cruD(path: Path, headers: Option[Pairs]) = null
   }
   
@@ -36,7 +36,6 @@ class CRUDSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
     val path = Seq(Left("a"), Left("b"), Right(Seq("c", "d")))
     val crud = new MinimalCRUD(endpoint)
     crud.makePath(path) should equal("a/b/c/d")
-        
   }
 
 }

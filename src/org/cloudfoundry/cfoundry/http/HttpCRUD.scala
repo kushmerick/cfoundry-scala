@@ -17,16 +17,22 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
   
   import CRUD._
 
-  override def Crud(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
-    execute(classOf[HttpPost], path, headers, payload)
+  override def Crud(path: Path, headers: Option[Pairs], pload: Payload): Response = {
+    pload match {
+      case (payload, contentType) =>
+        execute(classOf[HttpPost], path, headers, payload, contentType)
+    }
   }
 
   override def cRud(path: Path, headers: Option[Pairs]): Response = {
     execute(classOf[HttpGet], path, headers)
   }
 
-  override def crUd(path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
-    execute(classOf[HttpPut], path, headers, payload)
+  override def crUd(path: Path, headers: Option[Pairs], pload: Payload): Response = {
+    pload match {
+      case (payload, contentType) =>
+        execute(classOf[HttpPut], path, headers, payload, contentType)
+    }
   }
 
   override def cruD(path: Path, headers: Option[Pairs]): Response = {
@@ -39,8 +45,14 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     execute(makeRequest(classs, path, headers))
   }
   
-  private def execute[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[Chalice]): Response = {
-    execute(makeRequest(classs, path, headers, payload))
+  private def execute[T <: HttpEntityEnclosingRequestBase](
+    classs: Class[T],
+    path: Path,
+    headers: Option[Pairs],
+    payload: Option[Chalice],
+    contentType: String
+  ): Response = {
+    execute(makeRequest(classs, path, headers, payload, contentType))
   }
     
   private val excerptLength = 4096
@@ -66,9 +78,15 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     request
   }
 
-  private def makeRequest[T <: HttpEntityEnclosingRequestBase](classs: Class[T], path: Path, headers: Option[Pairs], payload: Option[Chalice]): HttpEntityEnclosingRequestBase = {
+  private def makeRequest[T <: HttpEntityEnclosingRequestBase](
+    classs: Class[T],
+    path: Path,
+    headers: Option[Pairs],
+    payload: Option[Chalice],
+    contentType: String
+  ): HttpEntityEnclosingRequestBase = {
     val request = makeRequest(classs, path, headers).asInstanceOf[T]
-    setPayload(request, payload)
+    setPayload(request, payload, contentType)
     request
   }
 
@@ -90,30 +108,34 @@ class HttpCRUD(var _endpoint: String, val _logger: Logger = null) extends CRUD(_
     }
   }
 
-  private def setPayload(request: HttpEntityEnclosingRequest, payload: Option[Chalice]) = {
+  private def setPayload(request: HttpEntityEnclosingRequest, payload: Option[Chalice], contentType: String) = {
     if (payload.isDefined) {
-      request.setEntity(makeEntity(payload.get))
+      val entity = makeEntity(payload.get, contentType)
+      request.setEntity(entity)
+      request.addHeader(CT, entity.getContentType().getValue())
     }
     request
   }
   
-  private def makeEntity(payload: Chalice) = {
-    if (payload.isSeq) {
-      val e = new MultipartEntity 
-      payload.seq.foreach(part => {
-        e.addPart(part("name").string, contentBody(part(CT).string, part("body")))
-      })
+  private def makeEntity(payload: Chalice, contentType: String) = {
+    if (contentType.startsWith(ctMULTI)) {
+      val e = new MultipartEntity
+      for (part <- payload.seq) {
+        e.addPart(part(NAME).string, contentBody(part(CT).string, part(BODY)))
+      }
       e
     } else {
-      new ByteArrayEntity(payload.blob)
+      val e = new ByteArrayEntity(payload.blob)
+      e.setContentType(contentType)
+      e
     }
   }
 
   private def contentBody(contentType: String, body: Chalice) = {
     if (contentType == ctZIP) {
-      new ByteArrayBody(body("bytes").blob, ctZIP, body("filename").string)
+      new ByteArrayBody(body(DATA).blob, ctZIP, body(FILENAME).string)
     } else if (contentType == ctJSON) {
-      new StringBody(JSON.serialize(body("data")), ctJSON, UTF8)
+      new StringBody(JSON.serialize(body), ctJSON, UTF8)
     } else {
       throw new UnknownContentType(contentType)
     }
@@ -160,7 +182,7 @@ object HttpCRUD {
   def factory(endpoint: String, logger: Logger) = new HttpCRUD(endpoint, logger)
 
   private val STANDARD_HEADERS = Pairs(
-    CT -> ctJSON,
-    ACCEPT -> ctJSON)
-
+    ACCEPT -> ctJSON
+  )
+    
 }

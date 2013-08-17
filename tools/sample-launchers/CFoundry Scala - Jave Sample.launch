@@ -6,6 +6,9 @@
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
+<mapAttribute key="org.eclipse.debug.core.environmentVariables">
+<mapEntry key="CFFIXTURES" value="${project_loc:/cfoundry-scala}/fixtures/app"/>
+</mapAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.cloudfoundry.cfoundry.samples.java.Sample"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="${cftarget} ${cfusername} ${cfpassword}"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="cfoundry-scala"/>

@@ -3,7 +3,9 @@ package org.cloudfoundry.cfoundry.samples.scala
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.util._
+import org.cloudfoundry.cfoundry.config._
 import java.util.logging._
+import java.nio.file._
 
 object Sample extends scala.App {
 
@@ -26,26 +28,33 @@ object Sample extends scala.App {
   for (
     service <- client.services.resources;
     servicePlan <- service.servicePlans.resources;
-    serviceInstance <- servicePlan.serviceInstances
+    serviceInstance <- servicePlan.serviceInstances.resources
   ) {
     Console.println(s"Service ${service} has plan ${servicePlan} with instance ${serviceInstance}")
   }
 
-  val servicePlan: Resource = client.servicePlans(first = true)
-  val space: Resource = client.spaces(first = true)
-  val serviceInstance: Resource = servicePlan.serviceInstance
+  val servicePlan: ServicePlan = client.servicePlans(first = true)
+  val space: Space = client.spaces(first = true)
+  val serviceInstance: ServiceInstance = servicePlan.serviceInstance
   serviceInstance.name = "foobar"
   serviceInstance.space = space
   serviceInstance.servicePlan = servicePlan
   serviceInstance.save
-  
   serviceInstance.name = "foobaz"
   serviceInstance.save
-  
   serviceInstance.destroy
 
+  val app: App = client.app
+  app.name = "blah"
+  app.space = space
+  val zip = "app.zip"
+  val bits = Files.readAllBytes(Paths.get(Config.cfFixtures, zip))
+  app.bits = zip -> bits
+  app.save
+  app.destroy
+  
   client.logout
-
+  
   private def arguments = {
     (args(0), args(1), args(2))
   }

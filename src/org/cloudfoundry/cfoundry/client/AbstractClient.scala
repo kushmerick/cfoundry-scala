@@ -119,7 +119,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
 
   //// info
 
-  private def info = perform(() => getCrud.cRud("/info")())
+  private def info = perform({getCrud.cRud("/info")()})
 
   protected def cloudfoundryVersion = info("version").int
 

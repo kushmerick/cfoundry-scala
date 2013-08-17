@@ -1,28 +1,18 @@
 package org.cloudfoundry.cfoundry.resources
 
+import scala.collection.mutable._
+
 trait HasAppendages extends Resource {
   
   def registerAppendages(appendagess: Appendages[Any]*) {
     registeredAppendages ++= appendagess
   }
   
-  protected override def create = {
-    super.create
-    writeAppendages
-  }
-
-  protected override def update = {
-    super.update
-    writeAppendages
-  }
-  
-  private var registeredAppendages =
-    scala.collection.mutable.LinkedList[Appendages[Any]]()
-  
-  private def writeAppendages =
+  override def save = {
+    super.save
     registeredAppendages.foreach(_.write)
+  }
   
-  // TODO: For "App", the simpler "def bits_=" sugar allows for a very nice syntax: "app.bits = foobar".
-  // But the corresponding code for roles is uglier because it exposes the implementation to the caller  
+  private var registeredAppendages = LinkedList[Appendages[Any]]()
   
 }

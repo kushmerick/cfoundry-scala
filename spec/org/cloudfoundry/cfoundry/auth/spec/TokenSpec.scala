@@ -23,7 +23,7 @@ class TokenSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
  
  it should "decode the access token" in {
    val payload = Map("bar" -> "baz")
-   val encodedPayload = Token.b64.encodeAsString(JSON.serialize(Chalice(payload)).getBytes(UTF8))
+   val encodedPayload = B64.encodeAsString(JSON.serialize(Chalice(payload)).getBytes(UTF8))
    val accessToken = s"header.${encodedPayload}.crypto"
    val token = new Token(new Chalice(Map("token_type" -> "foo", "access_token" -> accessToken)))
    token.decodedPayload.raw should equal(payload)

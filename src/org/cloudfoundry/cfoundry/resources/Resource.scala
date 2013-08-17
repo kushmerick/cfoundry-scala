@@ -446,7 +446,7 @@ abstract class Resource(@BeanProperty var context: ClientContext)
     var path = _path + constraints.encode
     val resources = new ArrayBuilder.ofRef[Resource]
     do {
-      val payload = perform(() => crud.cRud(path)(options))
+      val payload = perform({crud.cRud(path)(options)})
       // TODO: This check for "resources" smells bad.
       if (payload.map.contains("resources")) {
         resources ++= payload("resources").seq.map(pload => factory.create(pload))
@@ -477,7 +477,7 @@ abstract class Resource(@BeanProperty var context: ClientContext)
   def destroy: Any = destroy(recursive = false)
 
   def destroy(recursive: Boolean = false) = {
-    if (hasId) {
+    if (!isLocalOnly) {
       delete(recursive)
       cache.eject(this)
       clearId
@@ -575,25 +575,31 @@ abstract class Resource(@BeanProperty var context: ClientContext)
       }
     }
     val payload = Chalice(JSON.serialize(Chalice(content)))
-    performAndReload(() => crud.Crud(absolutePath)(options)(Some(payload)))
+    performAndReload({crud.Crud(absolutePath)(options)(Some(payload), ctJSON)})
   }
 
   private def read = {
-    performAndReload(() => crud.cRud(_getUrl)(options))
+    performAndReload({crud.cRud(_getUrl)(options)})
   }
 
   protected def update = {
     val payload =
-      dirty
-      .filter(property => property.entity && !property.parental && !property.readOnly)
-      .map(property => property.getTrueSource -> getData(property))
-      .toMap
-    performAndReload(() => crud.crUd(_getUrl)(options)(Some(Chalice(JSON.serialize(Chalice(payload))))))
+      Chalice(
+        JSON.serialize(
+          Chalice(
+            dirty
+            .filter(property => property.entity && !property.parental && !property.readOnly)
+            .map(property => property.getTrueSource -> getData(property))
+            .toMap
+          )
+        )
+      )
+    performAndReload({crud.crUd(_getUrl)(options)(Some(payload), ctJSON)})
   }
 
   private def delete(recursive: Boolean) = {
     val path = _getUrl + (if (recursive) "?recursive=true" else "")
-    perform(() => crud.cruD(path)(options))
+    perform({crud.cruD(path)(options)})
     cache.eject(this)
   }
 
@@ -603,7 +609,7 @@ abstract class Resource(@BeanProperty var context: ClientContext)
     )
   )
 
-  protected def performAndReload(performer: () => Response) = {
+  protected def performAndReload(performer: => Response) = {
     // TODO: I think this is wrong.  fromInfo expects a single 'resource'
     // structure from the response payload.  But this gives it the entire
     // payload.  It should be something like:
@@ -613,15 +619,15 @@ abstract class Resource(@BeanProperty var context: ClientContext)
     clean
   }
 
-  def perform(performer: () => Response) = {
-    var response = performer()
+  def perform(performer: => Response) = {
+    var response = performer
     if (!response.ok) {
       if (response.code.get == HttpStatus.SC_UNAUTHORIZED) {
     	val msg = "Request denied (${response.code})"
     	if (authenticator != null) {
     	  if (authenticator()) {
             logger.fine(s"${msg}, but retrying after successful reauthentication")
-            response = performer()
+            response = performer
           } else {
             logger.fine(s"${msg} and reauthentication failed")
           }

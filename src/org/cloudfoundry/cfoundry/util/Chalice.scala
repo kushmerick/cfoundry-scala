@@ -102,8 +102,8 @@ class Chalice(val _obj: Any) {
       bool.toString
     } else if (isNull) {
       null
-    } else if (isBlob) {
-      b64.encodeAsString(blob)
+    } else if (isSeq || isMap) {
+      JSON.serialize(this)
     } else {
       unexpectedType(obj, null)
     }
@@ -198,7 +198,9 @@ class Chalice(val _obj: Any) {
     case x: Exception => unexpectedType(obj, x)
   }
 
-  private def unexpectedType(obj: Any, cause: Exception) = throw new UnexpectedType(obj, cause)
+  private def unexpectedType(obj: Any, cause: Exception) = {
+    throw new UnexpectedType(obj, cause)
+  }
 
   //// constants
 

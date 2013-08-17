@@ -1,7 +1,6 @@
 package org.cloudfoundry.cfoundry.auth
 
 import org.cloudfoundry.cfoundry.util._
-import org.apache.commons.codec.binary._
 import java.io._
 
 class Token(val info: Chalice = null) {
@@ -19,16 +18,10 @@ class Token(val info: Chalice = null) {
     while (encoded.length % 4 > 0) {
       encoded = s"${encoded}=" // Uggg: https://github.com/cloudfoundry/cf-uaa-lib/blob/master/lib/uaa/util.rb#L173
     }
-    val decoded = Token.b64.decode(encoded)
+    val decoded = B64.decode(encoded)
     Chalice(JSON.deserialize(new ByteArrayInputStream(decoded)))
   }
 
   override def toString = s"<Token: ${info}>"
 
-}
-
-object Token {
-
-  val b64 = new Base64(true) // URL-safe
-  
 }

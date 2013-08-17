@@ -14,7 +14,11 @@ abstract class Appendages[T](resource: HasAppendages) extends ClassNameUtilities
 
   protected def decode(payload: Chalice): T
   
-  protected def contentType = "application/json"
+  protected def contentType = ctJSON
+      
+  def empty = data == nullt
+    
+  def clear = set(nullt)
 
   def set(_data: T) = {
     data = _data
@@ -26,37 +30,42 @@ abstract class Appendages[T](resource: HasAppendages) extends ClassNameUtilities
     data
   }
   
-  def update(n: Null, _data: T) = set(_data) // for app.bits = foo --> app.bits.update(null,foo)
+  private val nullt = null.asInstanceOf[T]
+  protected var data = nullt
+  private var dirty = false
+  
+  // upload
 
-  protected var data: T = null.asInstanceOf[T]
-  protected var dirty = false
-
-  protected val uploadPath = {
+  protected val upload = {
     var path = getBriefClassName                // Foo$BuzBars
     val i = path.lastIndexOf('$')
     if (i >= 0) path = path.substring(i+1)      // BuzBars
     Appendages.inflector.camelToUnderline(path) // buz_bars
   }
 
-  protected val downloadPath = uploadPath
-
   def write = {
     if (dirty) {
-      val path = Right(Seq(resource._getUrl, uploadPath))
-      val payload = encode
-      val options = resource.options.get ++ Pairs("Content-Type" -> contentType)
-      resource.perform(() => resource.context.getCrud.crUd(path)(Some(options))(Some(payload)))
+      val path = Right(Seq(resource._getUrl, upload))
+      val payload = (Some(encode), contentType)
+      resource.perform({resource.context.getCrud.crUd(path)(resource.options)(payload)})
+      clear // see note [!!^^!!] below
       dirty = false
     }
   }
+  
+  // download
+
+  protected val download = upload
 
   def read = {
-    if (data == null && !resource.isLocalOnly && !dirty) {
-      val path = Right(Seq(resource._getUrl, downloadPath))
-      val payload = resource.perform(() => resource.context.getCrud.cRud(path)(resource.options))
-      data = decode(payload)
-      dirty = false
-    }
+    // Note [^^!!^^] -- We could be clever and not fetch the data if we already have it.
+    // But we don't want to keep an entire app tarball in memory.  So above we eject the
+    // tarball as soon as we write it, and re-read it every time (which is OK, because this
+    // is a rare-ish operation?!).
+    val path = Right(Seq(resource._getUrl, download))
+    val payload = resource.perform({resource.context.getCrud.cRud(path)(resource.options)})
+    data = decode(payload)
+    dirty = false
   }
 
 }
