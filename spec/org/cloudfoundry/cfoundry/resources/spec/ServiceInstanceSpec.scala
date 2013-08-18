@@ -13,15 +13,10 @@ class ServiceInstanceSpec extends FlatSpec with ShouldMatchers with MockedClient
     // fake service gateway URL does not exist.  so this test selects
     // some genuine service plan from the server, and it marks itself
     // pending if it can't find one.
-      client.services(first = true).resource.servicePlans(first = true).resource
-    } catch {
-      case x: Exception => null
-    }
-
-   // we can't use ResourceFixture to create servicePlan, because the
-   // fake service gateway URL does not exist.  so these tests select
-   // some genuine service plan from the server, and it marks itself
-   // pending if it can't find one.
+    client.services(first = true).resource.servicePlans(first = true).resource
+  } catch {
+    case x: Exception => null
+  }
     
   "ServiceInstance" should "be CRUDable" in { client =>
     val servicePlan = pickPlan(client)
