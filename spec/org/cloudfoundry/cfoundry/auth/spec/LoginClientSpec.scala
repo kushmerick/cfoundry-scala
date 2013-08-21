@@ -1,17 +1,10 @@
 package org.cloudfoundry.cfoundry.client.spec
 
-import org.cloudfoundry.cfoundry._
 import org.cloudfoundry.cfoundry.client.mock._
-import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.config._
-import org.cloudfoundry.cfoundry.http.mock._
-import org.cloudfoundry.cfoundry.client._
 import org.cloudfoundry.cfoundry.exceptions._
-import org.cloudfoundry.cfoundry.auth._
-import org.cloudfoundry.cfoundry.util._
 import org.scalatest.fixture._
 import org.scalatest.matchers._
-import java.util.logging._
 
 class LoginClientSpec extends FlatSpec with ShouldMatchers with MockedClientFixture {
 

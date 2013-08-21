@@ -9,24 +9,33 @@ import scala.util._
 
 trait CRUDTests extends ShouldMatchers {
 
-  def testCRUD(client: MockedClient, noun: String, initialization: Map[String, Any] = Map()) = {
+  def testCRUD(
+    client: MockedClient,
+    noun: String,
+    initialization: Map[String, Any] = Map(),
+    beforeSave: Resource => Any = null,
+    updateTest0: Triple[String,Any,Any] = null
+  ) = {
+    var updateTest = updateTest0
+    if (updateTest == null) {
+      updateTest = ("name", s"testcrud_${noun}", s"testcrud_${noun}_updated")
+    }
     // C
     var resource = client.factoryFor(noun).create
-    var name = s"testcrud_${noun}"
-    resource.name = name
+    resource.updateDynamic(updateTest._1)(updateTest._2)
     for ((property, value) <- initialization) {
       resource.updateDynamic(property)(value)
     }
+    if (beforeSave != null) beforeSave(resource)
     resource.save
     // R
     exists(client, noun, resource) should be(true) // TODO: if this throws an exception, then we will never destroy resource
     // U
-    name += "_renamed"
-    resource.name = name
+    resource.updateDynamic(updateTest._1)(updateTest._3)
     resource.save                                  // TODO: ditto
-    resource.name.string should be(name)
+    resource.selectDynamic(updateTest._1).string should be(updateTest._3.toString)
     // D
-    resource.destroy                               // TODO: related to the earlier notes: put this in a "finally"
+    resource.destroy                               // TODO: related to the earlier notes: put this in a "finally"?
     exists(client, noun, resource) should be(false)
   }
   

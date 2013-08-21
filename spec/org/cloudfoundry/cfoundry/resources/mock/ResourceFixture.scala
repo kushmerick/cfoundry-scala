@@ -1,4 +1,4 @@
-package org.cloudfoundry.cfoundry.resources.spec
+package org.cloudfoundry.cfoundry.resources.mock
 
 import org.cloudfoundry.cfoundry.util._
 import org.cloudfoundry.cfoundry.resources._
@@ -13,20 +13,26 @@ trait ResourceFixture {
   //
   // For example:
   //
-  //     give a "space" with "name" -> "foo" with "org" -> org from client to { space => ... }
+  //     give a "space" where "name" -> "foo" and "org" -> org and { _.doSomething } from client to without "saving" to {resource => ... }
 
   object give {
-    def a(noun: String) = new DSL(noun, Map(), null)
+    def a(noun: String) = new DSL(noun, true, Map(), List(), null)
     def an(noun: String) = a(noun)
   }
 
-  type Where = Pair[String, Any]
+  type Where = Pair[String,Any]
   type Wheres = Map[String, Any]
+  type Mutator = Resource => Any
+  type Mutators = List[Mutator]
 
-  protected class DSL(noun: String, wheres: Wheres, client: MockedClient) {
+  protected class DSL(noun: String, save: Boolean, wheres: Wheres, mutators: Mutators, client: MockedClient) {
 
-    def where(w: Where) = new DSL(noun, wheres + w, client)
-    def from(client: MockedClient) = new DSL(noun, wheres, client)
+    def where(w: Where) = new DSL(noun, save, wheres + w, mutators, client)
+    def where(m: Mutator) = new DSL(noun, save, wheres, mutators ++ List(m), client)
+    def and(w: Where) = new DSL(noun, save, wheres + w, mutators, client)
+    def and(m: Mutator) = new DSL(noun, save, wheres, mutators ++ List(m), client)
+    def saved(b: Boolean) = new DSL(noun, b, wheres, mutators, client)
+    def from(client: MockedClient) = new DSL(noun, save, wheres, mutators, client)
     def to(test: Resource => Any) = manageResource(test)
 
     private def manageResource(test: Resource => Any) = {
@@ -37,7 +43,7 @@ trait ResourceFixture {
       var teardownException: Exception = null
       var blockException: Exception = null
       try {
-        createResource(client, noun, wheres) match {
+        createResource(client, noun, save, wheres, mutators) match {
           case (resource, _roots) => {
             roots = _roots
             try {
@@ -77,7 +83,7 @@ trait ResourceFixture {
     }
   }
 
-  private def createResource(client: MockedClient, noun: String, wheres: Wheres): (Resource, Seq[Resource]) = {
+  private def createResource(client: MockedClient, noun: String, save: Boolean, wheres: Wheres, mutators: Mutators): (Resource, Seq[Resource]) = {
     // recursively create a foo and any necessary parents; returns the resource, and also
     // the roots of the forest, so that everything can be cleaned up
     val resource = client.factoryFor(noun).create
@@ -90,20 +96,23 @@ trait ResourceFixture {
     }
     var roots = Seq[Resource]()
     for ((pn, pc) <- resource.parents) {
-      val pv = whereOrElse(wheres, pn, { createResource(client, pn, Map()) match { case (p, rs) => { roots ++= rs; p } } })
+      val pv = whereOrElse(wheres, pn, { createResource(client, pn, save, Map(), List()) match { case (p, rs) => { roots ++= rs; p } } })
       resource.updateDynamic(pn)(pv)
     }
-    try {
-      resource.save
-    } catch {
-      case x: Exception => {
-        var saveException = x
-        try {
-          destroyRoots(roots)
-        } catch {
-          case y: Exception => saveException = new MultipleCauses(x, y)
+    mutators.foreach(mutator => mutator(resource))
+    if (save) {
+      try {
+        resource.save
+      } catch {
+        case x: Exception => {
+          var saveException = x
+          try {
+            destroyRoots(roots)
+          } catch {
+            case y: Exception => saveException = new MultipleCauses(x, y)
+          }
+          throw saveException
         }
-        throw saveException
       }
     }
     if (roots.isEmpty) {

@@ -1,8 +1,9 @@
 package org.cloudfoundry.cfoundry.resources.spec
 
+import org.cloudfoundry.cfoundry.client.mock._
+import org.cloudfoundry.cfoundry.resources.mock._
 import org.scalatest.matchers._
 import org.scalatest.fixture._
-import org.cloudfoundry.cfoundry.client.mock.MockedClientFixture
 
 class ServiceInstanceSpec extends FlatSpec with ShouldMatchers with MockedClientFixture with CRUDTests with EnumerationTests with ResourceFixture {
 

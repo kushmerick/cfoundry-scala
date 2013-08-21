@@ -1,4 +1,4 @@
-// DO NOT EDIT -- Automagically generated at 2013-08-14 14:31:50.477 by org.cloudfoundry.cfoundry.java_friendly.Generate$
+// DO NOT EDIT -- Automagically generated at 2013-08-21 10:06:12.695 by org.cloudfoundry.cfoundry.java_friendly.Generate$
 package org.cloudfoundry.cfoundry.client.java_friendly
 import scala.collection.JavaConversions._
 trait ClientJF {
@@ -18,6 +18,8 @@ trait ClientJF {
   def getServicesUrl: java.lang.String = selectDynamic("servicesUrl").raw.asInstanceOf[java.lang.String]
   def getSpacesUrl: java.lang.String = selectDynamic("spacesUrl").raw.asInstanceOf[java.lang.String]
   def getTarget: java.lang.String = selectDynamic("target").raw.asInstanceOf[java.lang.String]
+  def getUrl: java.lang.String = selectDynamic("url").raw.asInstanceOf[java.lang.String]
+  def setUrl(value: java.lang.String): Unit = updateDynamic("url")(value)
   def getUsersUrl: java.lang.String = selectDynamic("usersUrl").raw.asInstanceOf[java.lang.String]
   def getVersion: java.lang.String = selectDynamic("version").raw.asInstanceOf[java.lang.String]
   def getServicePlans: java.util.List[org.cloudfoundry.cfoundry.resources.ServicePlan] = selectDynamic("servicePlans").resources.asInstanceOf[scala.collection.Seq[org.cloudfoundry.cfoundry.resources.ServicePlan]]

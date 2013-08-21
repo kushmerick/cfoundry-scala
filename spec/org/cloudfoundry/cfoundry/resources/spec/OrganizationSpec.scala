@@ -2,7 +2,8 @@ package org.cloudfoundry.cfoundry.resources.spec
 
 import org.scalatest.matchers._
 import org.scalatest.fixture._
-import org.cloudfoundry.cfoundry.client.mock.MockedClientFixture
+import org.cloudfoundry.cfoundry.client.mock._
+import org.cloudfoundry.cfoundry.resources.mock._
 
 class OrganizationSpec extends FlatSpec with ShouldMatchers with MockedClientFixture with CRUDTests with EnumerationTests with ResourceFixture {
 

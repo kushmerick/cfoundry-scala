@@ -552,12 +552,17 @@ abstract class Resource(@BeanProperty var context: ClientContext)
   import CRUD._
 
   protected def create = {
-    val content = Map[String, Any]()
+    val payload = Chalice(JSON.serialize(Chalice(createPayload)))
+    performAndReload({crud.Crud(absolutePath)(options)(Some(payload), ctJSON)})
+  }
+  
+  protected def createPayload = {
+    val payload = Map[String, Any]()
     for ((propertyName, property) <- properties) {
       if (property.readOnly || property.parental) {
         logger.finest(s"Ignoring property '${propertyName}' while creating ${this}")
       } else {
-        content.put(property.getTrueSource, getData(property))
+        payload.put(property.getTrueSource, getData(property))
       }
     }
     for ((parentName, parentClass) <- parents) {
@@ -571,14 +576,13 @@ abstract class Resource(@BeanProperty var context: ClientContext)
           throw new NotSaveable(this, s"Inconsistent parent '${parentName}': '${parentGuid}' and '${parent._getId}'")
         }
         if (parentGuid == null) parentGuid = parent._getId
-        content.put(parent_guid_key(parentName), parentGuid)
+        payload.put(parent_guid_key(parentName), parentGuid)
       }
     }
-    val payload = Chalice(JSON.serialize(Chalice(content)))
-    performAndReload({crud.Crud(absolutePath)(options)(Some(payload), ctJSON)})
+    payload
   }
 
-  private def read = {
+  protected def read = {
     performAndReload({crud.cRud(_getUrl)(options)})
   }
 
@@ -597,24 +601,28 @@ abstract class Resource(@BeanProperty var context: ClientContext)
     performAndReload({crud.crUd(_getUrl)(options)(Some(payload), ctJSON)})
   }
 
-  private def delete(recursive: Boolean) = {
+  protected def delete(recursive: Boolean) = {
     val path = _getUrl + (if (recursive) "?recursive=true" else "")
-    perform({crud.cruD(path)(options)})
     cache.eject(this)
+    try {
+      perform({crud.cruD(path)(options)})
+    } catch {
+      case x: BadResponse => {
+        if (x.response.code != Some(HttpStatus.SC_NOT_FOUND)) {
+          // 404 is weird, but let's not complain
+          throw x
+        }
+      }
+    }
   }
 
   def options = Some(
     Pairs(
-      AUTH -> token.authHeader
+      token.authHeader
     )
   )
 
   protected def performAndReload(performer: => Response) = {
-    // TODO: I think this is wrong.  fromInfo expects a single 'resource'
-    // structure from the response payload.  But this gives it the entire
-    // payload.  It should be something like:
-    // fromInfo(perform(performer)("resources").seq.first)
-    // OTOH, it is working fine now for Crud and cRud??!!
     fromInfo(perform(performer))
     clean
   }

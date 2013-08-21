@@ -23,6 +23,8 @@ class Response(val code: Option[Int] = None, _payload: Option[Chalice] = None) {
     case None => false
     case Some(c) => c >= 200 && c < 300
   }
+  
+  def notfound = code == Some(HttpStatus.SC_NOT_FOUND)
 
   override def toString = {
     val s = if (ok) "ok" else "error"
@@ -110,7 +112,8 @@ object Response {
   }
     
   private val DECODERS = Map(
-    "application/json" -> jsonDecoder _
+    ctJSON -> jsonDecoder _,
+    ctHTML -> textDecoder _ // just for HTML error response pages
   )
   
   // just some SWAGs....
@@ -139,6 +142,10 @@ object Response {
       // TODO: Hack/workaround for https://github.com/cloudfoundry/cloud_controller_ng/issues/79
       case x: Exception => bytes
     }
+  }
+  
+  private def textDecoder(entity: HttpEntity) = try {
+    new String(asBytes(entity))
   }
   
   private def blobDecoder(entity: HttpEntity) = {

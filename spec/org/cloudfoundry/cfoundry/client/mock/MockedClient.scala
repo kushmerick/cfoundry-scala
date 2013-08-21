@@ -25,8 +25,8 @@ class MockedClient(_logger: Logger) extends AbstractClient[MockCRUD](MockCRUD.fa
 
   def shutdown: Unit = {
     // today the students can be shut down in any order. but to guard against future
-    // changes, let's shut down the dependents first
-    dependantStudents.foreach(shutdown(_))
+    // changes, let's shut them down in the reverse order that we started them up.
+    dependantStudents.reverse.foreach(shutdown(_))
     shutdown(student)
   }
 
@@ -37,7 +37,8 @@ class MockedClient(_logger: Logger) extends AbstractClient[MockCRUD](MockCRUD.fa
   // requires the student to "GET /info".
   private lazy val dependantStudents = List(
     loginClient.crud.asInstanceOf[MockCRUD],
-    uaaClient.crud.asInstanceOf[MockCRUD])
+    uaaClient().crud.asInstanceOf[MockCRUD]
+  )
 
   private def startup(s: MockCRUD) {
     s.mode = Config.cfTestMode

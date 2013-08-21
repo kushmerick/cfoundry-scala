@@ -11,7 +11,7 @@ class TokenSpec extends FlatSpec with ShouldMatchers with BeforeAndAfter {
 
  "Token" should "generate auth_header" in {
     val token = new Token(new Chalice(Map("token_type" -> "foo", "access_token" -> "bar")))
-    token.authHeader should equal("foo bar")
+    token.authHeader should equal(AUTH -> "foo bar")
   }
  
  it should "not generate auth_header if not authenticated" in {

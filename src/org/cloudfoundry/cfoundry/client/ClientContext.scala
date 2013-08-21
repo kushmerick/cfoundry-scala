@@ -40,12 +40,17 @@ trait ClientContext {
   @BeanProperty
   protected var logger: Logger = null
 
-  //// authentication
+  //// authenticator
   
   type Authenticator = () => Boolean
 
   @BeanProperty
   var authenticator: Authenticator = null
+  
+  //// UAA client
+  
+  @BeanProperty
+  var uaaClient: () => UAAClient[CRUD] = null
 
 }
 

@@ -25,6 +25,7 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   clearToken
   setCache(new Cache(100))
   setAuthenticator(refreshAuthenticator)
+  setUaaClient(() => _uaaClient)
 
   //// properties
 
@@ -58,17 +59,13 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
     } catch { case x: Throwable => }
     return false
   }
-
+  
   //// authentication
 
   def login(username: String, password: String) = {
     setToken(loginClient.login(username, password))
   }
   
-  def loginSso(username: String) = {
-    setToken(loginClient.loginSso(username))
-  }
-
   def logout = {
     clearToken
   }
@@ -130,15 +127,15 @@ abstract class AbstractClient[TCRUD <: CRUD](crudFactory: (String, Logger) => TC
   //// auth clients
 
   private val UAA_ENDPOINT = "token_endpoint"
-  lazy val uaaClient: UAAClient[TCRUD] =
-    new UAAClient[TCRUD](crudFactory, discoverEndpoint(UAA_ENDPOINT), logger)
+  lazy val _uaaClient: UAAClient[TCRUD] =
+    new UAAClient[TCRUD](crudFactory, discoverEndpoint(UAA_ENDPOINT), context)
 
   private val LOGIN_ENDPOINT = "authorization_endpoint"
   lazy val loginClient: LoginClient[TCRUD] =
     new LoginClient[TCRUD](crudFactory, discoverEndpoint(LOGIN_ENDPOINT), logger)
     
   //// custom headers
-    
+
   def customHeaders = getCrud.customHeaders
   def customHeaders_=(headers: Pairs) = getCrud.customHeaders = headers
   def clearCustomHeaders = getCrud.customHeaders = Pairs()

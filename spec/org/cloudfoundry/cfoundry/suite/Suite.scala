@@ -10,8 +10,9 @@ import java.util.logging._
 class Suite
   extends org.scalatest.Suites(
     // auth
-    new LoginClientSpec,
     new TokenSpec,
+    new LoginClientSpec,
+    new UAAClientSpec,
     // client
     new ClientSpec,
     // http
@@ -27,6 +28,7 @@ class Suite
     new ServicePlanSpec,
     new ServiceSpec,
     new SpaceSpec,
+    new UserSpec,
     // util
     new ChaliceSpec,
     new ClassNameUtilitiesSpec,

@@ -7,7 +7,7 @@ class Token(val info: Chalice = null) {
   
   lazy val accessToken = info("access_token").string
 
-  lazy val authHeader = s"${info("token_type").string} ${accessToken}"
+  lazy val authHeader = AUTH -> s"${info("token_type").string} ${accessToken}"
   
   lazy val refreshToken = info("refresh_token").string
   

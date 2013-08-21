@@ -19,6 +19,7 @@ package object util {
   val ctZIP    = "application/zip"
   val ctFORM   = "application/x-www-form-urlencoded"
   val ctMULTI  = "multipart/form-data"
+  val ctHTML   = "text/html"
     
   // components of a multi-part entity
   val NAME     = "name"

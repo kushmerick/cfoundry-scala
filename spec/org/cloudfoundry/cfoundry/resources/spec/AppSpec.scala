@@ -5,6 +5,7 @@ import org.scalatest.fixture._
 import org.cloudfoundry.cfoundry.resources._
 import org.cloudfoundry.cfoundry.client.mock._
 import org.cloudfoundry.cfoundry.config._
+import org.cloudfoundry.cfoundry.resources.mock._
 import java.nio.file._
 import java.util.zip._
 import java.io._

@@ -59,14 +59,29 @@ class Chalice(val _obj: Any) {
     }
   }
 
-  //// seq
+  //// seq / set / array / list
 
-  private type S = Seq[Any]
+  private type SSeq = Seq[Any]
+  private type SSet = Set[Any]
+  private type SArr = Array[Any]
+  private type SLst = List[Any]
 
-  lazy val isSeq = obj.isInstanceOf[S]
+  lazy val isSeq = isSSeq || isSSet || isSArr || isSLst 
+  private lazy val isSSeq = obj.isInstanceOf[SSeq]
+  private lazy val isSSet = obj.isInstanceOf[SSet]
+  private lazy val isSArr = obj.isInstanceOf[SArr]
+  private lazy val isSLst = obj.isInstanceOf[SLst]
 
-  private lazy val _seq = asA[S]
-
+  private lazy val _seq =
+    if (isSSeq)
+      asA[SSeq]
+    else if (isSSet)
+      asA[SSet]
+    else if (isSArr)
+      asA[SArr].toSeq
+    else
+      asA[SLst]
+      
   lazy val seq = try {
     _seq.map(x => new Chalice(x))
   } catch {
@@ -213,9 +228,14 @@ class Chalice(val _obj: Any) {
   private lazy val pretty: String = obj match {
     case null => "null"
     case m: M => map.map({ case (k, v) => s"${k}: ${v.toString}" }).mkString("{", ", ", "}")
-    case a: S => seq.map(x => x.toString).mkString("[", ", ", "]")
     case s: String => "\"" + s + "\""
-    case x => x.toString
+    case x => {
+      if (isSeq) {
+        seq.map(x => x.toString).mkString("[", ", ", "]")
+      } else {
+        x.toString
+      }
+    }
   }
 
 }

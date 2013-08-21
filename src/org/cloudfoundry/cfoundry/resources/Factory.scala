@@ -6,17 +6,17 @@ import org.cloudfoundry.cfoundry.http._
 import org.cloudfoundry.cfoundry.client._
 import java.lang.reflect.Constructor
 
-class Factory(noun: String, context: ClientContext) extends ClassNameUtilities {
+class Factory(val noun: String, val context: ClientContext) extends ClassNameUtilities {
 
   private def inflector = context.getInflector
 
-  lazy val plural = inflector.pluralize(noun)
+  private lazy val plural = inflector.pluralize(noun)
 
   lazy val resourceClass: Class[_] = {
     getSiblingClass(inflector.capitalize(inflector.singularize(noun)))
   }
 
-  def create: Resource = {
+  def create = {
     resourceClass.getConstructors()(0).newInstance(context).asInstanceOf[Resource]
   }
 
